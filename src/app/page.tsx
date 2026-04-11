@@ -1,4 +1,4 @@
-import { Users, UserPlus, LogOut, TrendingUp, Activity } from "lucide-react";
+import { Users, UserPlus, LogOut, TrendingUp, Activity, ShieldAlert, CalendarClock } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
 import { SectionCard } from "@/components/section-card";
 import { getDashboardData } from "@/lib/patient-service";
@@ -12,30 +12,30 @@ async function getMetrics(): Promise<DashboardMetric[]> {
   return [
     {
       icon: Users,
-      label: "Internos Ativos",
+      label: "Internos ativos",
       value: data.activePatients.toString(),
-      description: "Pacientes internados atualmente",
+      description: "Pacientes acolhidos atualmente na unidade",
       tone: "primary",
     },
     {
       icon: UserPlus,
-      label: "Entradas no Mês",
+      label: "Entradas no mês",
       value: data.monthlyAdmissions.toString(),
-      description: "Novas admissões neste mês",
+      description: "Novas admissões registradas no período",
       tone: "success",
     },
     {
       icon: LogOut,
-      label: "Saídas no Mês",
+      label: "Saídas no mês",
       value: data.monthlyDischarges.toString(),
-      description: "Altas e encerramentos",
+      description: "Altas e encerramentos da unidade",
       tone: "warning",
     },
     {
       icon: TrendingUp,
-      label: "Taxa de Desistência",
+      label: "Taxa de evasão",
       value: `${data.dropoutRate}%`,
-      description: "Percentual de evasões",
+      description: "Percentual de evasões sobre o total de acolhidos",
       tone: "danger",
     },
   ];
@@ -47,10 +47,38 @@ export default async function DashboardPage() {
 
   return (
     <div className="dashboard-container">
-      <div className="dashboard-header">
-        <h2>Visão Geral</h2>
-        <p className="text-muted">Acompanhe as métricas e indicadores da clínica.</p>
-      </div>
+      <section className="dashboard-hero">
+        <div className="dashboard-hero-main">
+          <h2>Painel assistencial da unidade</h2>
+          <p>
+            Acompanhe ocupação, alertas operacionais, evoluções recentes e tudo que exige atenção da equipe no dia.
+          </p>
+
+          <div className="hero-pills">
+            <span className="hero-pill">
+              <ShieldAlert size={16} />
+              3 prontuários pendentes
+            </span>
+            <span className="hero-pill">
+              <CalendarClock size={16} />
+              2 revisões previstas hoje
+            </span>
+            <span className="hero-pill">
+              <Activity size={16} />
+              Fluxo clínico estável
+            </span>
+          </div>
+        </div>
+
+        <div className="dashboard-hero-aside">
+          <span>Ocupação atual</span>
+          <strong>{data.occupancyRate}%</strong>
+          <p>Capacidade assistencial dentro da faixa segura, mas com pressão moderada na rotina.</p>
+          <div className="aside-progress">
+            <div />
+          </div>
+        </div>
+      </section>
 
       <div className="metrics-grid">
         {metrics.map((metric, index) => (
@@ -60,9 +88,9 @@ export default async function DashboardPage() {
 
       <div className="charts-grid">
         <SectionCard
-          title="Atividade Recente"
-          description="Últimas ocorrências na clínica"
-          actions={<button className="btn btn-outline btn-sm">Ver Todos</button>}
+          title="Atividade recente"
+          description="Movimentações clínicas e administrativas mais recentes da unidade"
+          actions={<button className="btn btn-outline btn-sm">Ver histórico</button>}
         >
           <div className="activity-list">
             {data.recentActivity.map((activity) => (
@@ -98,7 +126,7 @@ export default async function DashboardPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Informações Importantes" description="Lembretes e avisos gerais">
+        <SectionCard title="Pendências críticas" description="Itens que merecem ação rápida da equipe">
           <ul className="info-list">
             {data.alerts.map((alert, index) => (
               <li key={index}>{alert}</li>
