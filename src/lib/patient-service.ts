@@ -1,212 +1,303 @@
-import { HospitalizationStatus, HospitalizationType, Prisma } from "@prisma/client";
-import { prisma } from "./db";
 import { DashboardSummary, PatientRecord, TimelineItem } from "./types";
+import { getSupabaseClient } from "./supabase";
 
-const patientInclude = {
-  responsibles: {
-    orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
-  },
-  admissions: {
-    orderBy: { admissionDate: "desc" },
-  },
-  medications: {
-    orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
-  },
-  evolutionRecords: {
-    orderBy: { recordDate: "desc" },
-  },
-  occurrences: {
-    orderBy: { occurredAt: "desc" },
-    take: 10,
-  },
-} satisfies Prisma.PatientInclude;
-
-type PatientWithRelations = Prisma.PatientGetPayload<{
-  include: typeof patientInclude;
-}>;
-
-function hospitalizationTypeLabel(type?: HospitalizationType): "Voluntária" | "Involuntária" {
+function hospitalizationTypeLabel(type?: string | null): "Voluntária" | "Involuntária" {
   return type === "INVOLUNTARY" ? "Involuntária" : "Voluntária";
 }
 
-function buildAddress(patient: PatientWithRelations) {
-  const parts = [
-    patient.addressLine,
-    patient.neighborhood,
-    patient.city,
-    patient.state,
-  ].filter(Boolean);
-
-  if (parts.length > 0) {
-    return parts.join(" - ");
-  }
-
-  return patient.addressNotes || "Não informado";
+function buildAddress(patient: {
+  address_line?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  address_notes?: string | null;
+}) {
+  const parts = [patient.address_line, patient.neighborhood, patient.city, patient.state].filter(Boolean);
+  return parts.length > 0 ? parts.join(" - ") : patient.address_notes || "Não informado";
 }
 
-function toPatientRecord(patient: PatientWithRelations): PatientRecord {
-  const latestAdmission = patient.admissions[0];
+type PatientRow = {
+  id: string;
+  full_name: string;
+  social_name?: string | null;
+  cpf: string;
+  rg?: string | null;
+  birth_date: string;
+  marital_status?: string | null;
+  nationality?: string | null;
+  naturalness?: string | null;
+  phone?: string | null;
+  profession?: string | null;
+  father_name?: string | null;
+  mother_name?: string | null;
+  has_children?: boolean | null;
+  children_count?: number | null;
+  sus_card?: string | null;
+  address_line?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
+  address_notes?: string | null;
+  general_notes?: string | null;
+  created_at: string;
+  responsible_people?: Array<{
+    id: string;
+    full_name: string;
+    relationship: string;
+    phone?: string | null;
+    email?: string | null;
+    type: "FAMILY" | "VOLUNTARY" | "OTHER";
+    is_primary?: boolean | null;
+    notes?: string | null;
+    created_at: string;
+  }>;
+  admissions?: Array<{
+    id: string;
+    hospitalization_type: string;
+    status: "INTERNED" | "DISCHARGED" | "DISCONNECTED" | "EVADED";
+    admission_date: string;
+    expected_exit_date?: string | null;
+    exit_date?: string | null;
+    created_at: string;
+  }>;
+  medications?: Array<{
+    id: string;
+    name: string;
+    dosage: string;
+    frequency: string;
+    route?: string | null;
+    responsible_doctor?: string | null;
+    start_date?: string | null;
+    end_date?: string | null;
+    is_active: boolean;
+    notes?: string | null;
+    created_at: string;
+  }>;
+  evolution_records?: Array<{
+    id: string;
+    record_date: string;
+    observations: string;
+    weekly_evolution?: string | null;
+    occurrences?: string | null;
+    mood?: string | null;
+  }>;
+  patient_occurrences?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    severity: number;
+    occurred_at: string;
+  }>;
+};
+
+function toPatientRecord(patient: PatientRow): PatientRecord {
+  const admissions = [...(patient.admissions ?? [])].sort(
+    (a, b) => new Date(b.admission_date).getTime() - new Date(a.admission_date).getTime(),
+  );
+  const latestAdmission = admissions[0];
+  const responsibles = [...(patient.responsible_people ?? [])].sort((a, b) => {
+    const primaryDiff = Number(Boolean(b.is_primary)) - Number(Boolean(a.is_primary));
+    if (primaryDiff !== 0) return primaryDiff;
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  });
+  const medications = [...(patient.medications ?? [])].sort((a, b) => {
+    const activeDiff = Number(b.is_active) - Number(a.is_active);
+    if (activeDiff !== 0) return activeDiff;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+  const evolutions = [...(patient.evolution_records ?? [])].sort(
+    (a, b) => new Date(b.record_date).getTime() - new Date(a.record_date).getTime(),
+  );
+  const occurrences = [...(patient.patient_occurrences ?? [])].sort(
+    (a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime(),
+  );
 
   return {
     id: patient.id,
-    fullName: patient.fullName,
-    socialName: patient.socialName ?? undefined,
+    fullName: patient.full_name,
+    socialName: patient.social_name ?? undefined,
     cpf: patient.cpf,
     rg: patient.rg ?? undefined,
-    birthDate: patient.birthDate.toISOString(),
-    maritalStatus: patient.maritalStatus ?? undefined,
+    birthDate: patient.birth_date,
+    maritalStatus: patient.marital_status ?? undefined,
     nationality: patient.nationality ?? undefined,
     naturalness: patient.naturalness ?? undefined,
     phone: patient.phone ?? undefined,
     profession: patient.profession ?? undefined,
-    fatherName: patient.fatherName ?? undefined,
-    motherName: patient.motherName ?? undefined,
-    hasChildren: patient.hasChildren,
-    childrenCount: patient.childrenCount,
-    susCard: patient.susCard ?? undefined,
+    fatherName: patient.father_name ?? undefined,
+    motherName: patient.mother_name ?? undefined,
+    hasChildren: patient.has_children ?? false,
+    childrenCount: patient.children_count ?? 0,
+    susCard: patient.sus_card ?? undefined,
     addressOrStreetSituation: buildAddress(patient),
-    addressLine: patient.addressLine ?? undefined,
+    addressLine: patient.address_line ?? undefined,
     neighborhood: patient.neighborhood ?? undefined,
     city: patient.city ?? undefined,
     state: patient.state ?? undefined,
-    zipCode: patient.zipCode ?? undefined,
-    addressNotes: patient.addressNotes ?? undefined,
-    generalNotes: patient.generalNotes ?? undefined,
-    admissionDate: latestAdmission?.admissionDate.toISOString() ?? patient.createdAt.toISOString(),
-    expectedExitDate: latestAdmission?.expectedExitDate?.toISOString(),
-    hospitalizationType: hospitalizationTypeLabel(latestAdmission?.hospitalizationType),
+    zipCode: patient.zip_code ?? undefined,
+    addressNotes: patient.address_notes ?? undefined,
+    generalNotes: patient.general_notes ?? undefined,
+    admissionDate: latestAdmission?.admission_date ?? patient.created_at,
+    expectedExitDate: latestAdmission?.expected_exit_date ?? undefined,
+    hospitalizationType: hospitalizationTypeLabel(latestAdmission?.hospitalization_type),
     status: latestAdmission?.status ?? "INTERNED",
-    responsibles: patient.responsibles.map((responsible) => ({
+    responsibles: responsibles.map((responsible) => ({
       id: responsible.id,
-      fullName: responsible.fullName,
+      fullName: responsible.full_name,
       relationship: responsible.relationship,
       phone: responsible.phone ?? undefined,
       email: responsible.email ?? undefined,
       type: responsible.type,
-      isPrimary: responsible.isPrimary,
+      isPrimary: responsible.is_primary ?? false,
       notes: responsible.notes ?? undefined,
     })),
-    medications: patient.medications.map((medication) => ({
+    medications: medications.map((medication) => ({
       id: medication.id,
       name: medication.name,
       dosage: medication.dosage,
       frequency: medication.frequency,
       route: medication.route ?? undefined,
-      responsibleDoctor: medication.responsibleDoctor ?? undefined,
-      startDate: medication.startDate?.toISOString(),
-      endDate: medication.endDate?.toISOString(),
-      isActive: medication.isActive,
+      responsibleDoctor: medication.responsible_doctor ?? undefined,
+      startDate: medication.start_date ?? undefined,
+      endDate: medication.end_date ?? undefined,
+      isActive: medication.is_active,
       notes: medication.notes ?? undefined,
     })),
-    evolutions: patient.evolutionRecords.map((record) => ({
+    evolutions: evolutions.map((record) => ({
       id: record.id,
-      createdAt: record.recordDate.toISOString(),
+      createdAt: record.record_date,
       observations: record.observations,
-      weeklyEvolution: record.weeklyEvolution ?? undefined,
+      weeklyEvolution: record.weekly_evolution ?? undefined,
       occurrences: record.occurrences ?? undefined,
       mood: record.mood ?? undefined,
     })),
-    alerts: patient.occurrences
-      .filter((occurrence) => occurrence.severity >= 3)
-      .map((occurrence) => occurrence.title),
+    alerts: occurrences.filter((occurrence) => occurrence.severity >= 3).map((occurrence) => occurrence.title),
   };
 }
 
-export async function listPatients() {
-  const patients = await prisma.patient.findMany({
-    include: patientInclude,
-    orderBy: { createdAt: "desc" },
-  });
+async function fetchPatients() {
+  const supabase = getSupabaseClient();
 
+  const { data, error } = await supabase
+    .from("patients")
+    .select(`
+      *,
+      responsible_people(*),
+      admissions(*),
+      medications(*),
+      evolution_records(*),
+      patient_occurrences(*)
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Erro ao buscar pacientes no Supabase: ${error.message}`);
+  }
+
+  return (data ?? []) as PatientRow[];
+}
+
+export async function listPatients() {
+  const patients = await fetchPatients();
   return patients.map(toPatientRecord);
 }
 
 export async function findPatient(id: string) {
-  const patient = await prisma.patient.findUnique({
-    where: { id },
-    include: patientInclude,
-  });
+  const supabase = getSupabaseClient();
 
-  return patient ? toPatientRecord(patient) : null;
+  const { data, error } = await supabase
+    .from("patients")
+    .select(`
+      *,
+      responsible_people(*),
+      admissions(*),
+      medications(*),
+      evolution_records(*),
+      patient_occurrences(*)
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+
+    throw new Error(`Erro ao buscar paciente no Supabase: ${error.message}`);
+  }
+
+  return toPatientRecord(data as PatientRow);
 }
 
 export async function getDashboardData(): Promise<DashboardSummary> {
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const patients = await fetchPatients();
+  const parsedPatients = patients.map(toPatientRecord);
 
-  const [
-    activePatients,
-    monthlyAdmissions,
-    monthlyDischarges,
-    totalAdmissions,
-    totalEvaded,
-    recentAdmissions,
-    recentEvolutions,
-    recentOccurrences,
-    pendingDocuments,
-    activeMedications,
-  ] = await Promise.all([
-    prisma.admission.count({ where: { status: HospitalizationStatus.INTERNED } }),
-    prisma.admission.count({ where: { admissionDate: { gte: monthStart, lt: nextMonthStart } } }),
-    prisma.admission.count({ where: { status: HospitalizationStatus.DISCHARGED, exitDate: { gte: monthStart, lt: nextMonthStart } } }),
-    prisma.admission.count(),
-    prisma.admission.count({ where: { status: HospitalizationStatus.EVADED } }),
-    prisma.admission.findMany({
-      take: 4,
-      orderBy: { createdAt: "desc" },
-      include: { patient: true },
-    }),
-    prisma.evolutionRecord.findMany({
-      take: 4,
-      orderBy: { recordDate: "desc" },
-      include: { patient: true },
-    }),
-    prisma.patientOccurrence.findMany({
-      take: 4,
-      orderBy: [{ severity: "desc" }, { occurredAt: "desc" }],
-      include: { patient: true },
-    }),
-    prisma.patientDocument.count({ where: { isDelivered: false } }),
-    prisma.medication.count({ where: { isActive: true } }),
-  ]);
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const allAdmissions = patients.flatMap((patient) => patient.admissions ?? []);
+  const allMedications = patients.flatMap((patient) => patient.medications ?? []);
+  const allEvolutions = patients.flatMap((patient) =>
+    (patient.evolution_records ?? []).map((record) => ({ record, patientName: patient.full_name })),
+  );
+  const allOccurrences = patients.flatMap((patient) =>
+    (patient.patient_occurrences ?? []).map((occurrence) => ({ occurrence, patientName: patient.full_name })),
+  );
+
+  const activePatients = parsedPatients.filter((patient) => patient.status === "INTERNED").length;
+  const monthlyAdmissions = allAdmissions.filter((admission) => {
+    const date = new Date(admission.admission_date);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  }).length;
+  const monthlyDischarges = allAdmissions.filter((admission) => {
+    if (!admission.exit_date || admission.status !== "DISCHARGED") return false;
+    const date = new Date(admission.exit_date);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  }).length;
+  const totalAdmissions = allAdmissions.length;
+  const totalEvaded = allAdmissions.filter((admission) => admission.status === "EVADED").length;
+  const dropoutRate = totalAdmissions > 0 ? Number(((totalEvaded / totalAdmissions) * 100).toFixed(1)) : 0;
+  const occupancyRate = Math.min(activePatients * 10, 100);
 
   const recentActivity: TimelineItem[] = [
-    ...recentAdmissions.map((item) => ({
-      id: `admission-${item.id}`,
-      type: "admission" as const,
-      title: "Nova admissão",
-      description: `${item.patient.fullName} foi admitido na unidade.`,
-      createdAt: item.createdAt.toISOString(),
+    ...allAdmissions.map((admission) => ({
+      id: `admission-${admission.id}`,
+      type: admission.status === "DISCHARGED" ? ("discharge" as const) : ("admission" as const),
+      title: admission.status === "DISCHARGED" ? "Alta registrada" : "Nova admissão",
+      description: `${parsedPatients.find((patient) => patient.admissionDate === admission.admission_date)?.fullName ?? "Paciente"} ${admission.status === "DISCHARGED" ? "teve alta registrada." : "foi admitido na unidade."}`,
+      createdAt: admission.created_at,
     })),
-    ...recentEvolutions.map((item) => ({
-      id: `evolution-${item.id}`,
+    ...allEvolutions.map(({ record, patientName }) => ({
+      id: `evolution-${record.id}`,
       type: "evolution" as const,
       title: "Evolução clínica",
-      description: `${item.patient.fullName} recebeu atualização no prontuário.`,
-      createdAt: item.recordDate.toISOString(),
+      description: `${patientName} recebeu atualização no prontuário.`,
+      createdAt: record.record_date,
     })),
-    ...recentOccurrences.map((item) => ({
-      id: `occurrence-${item.id}`,
-      type: item.severity >= 4 ? ("alert" as const) : ("medication" as const),
-      title: item.title,
-      description: `${item.patient.fullName}: ${item.title}`,
-      createdAt: item.occurredAt.toISOString(),
+    ...allOccurrences.map(({ occurrence, patientName }) => ({
+      id: `occurrence-${occurrence.id}`,
+      type: occurrence.severity >= 4 ? ("alert" as const) : ("medication" as const),
+      title: occurrence.title,
+      description: `${patientName}: ${occurrence.title}`,
+      createdAt: occurrence.occurred_at,
     })),
   ]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 6);
 
-  const occupancyRate = Math.min(activePatients * 10, 100);
-  const dropoutRate = totalAdmissions > 0 ? Number(((totalEvaded / totalAdmissions) * 100).toFixed(1)) : 0;
+  const pendingDocumentsEstimate = parsedPatients.filter((patient) => patient.alerts.length > 0).length;
+  const activeMedications = allMedications.filter((medication) => medication.is_active).length;
 
   const alerts: string[] = [];
 
-  if (pendingDocuments > 0) {
-    alerts.push(`${pendingDocuments} documento(s) ainda aguardam entrega ou conferência.`);
+  if (pendingDocumentsEstimate > 0) {
+    alerts.push(`${pendingDocumentsEstimate} paciente(s) possuem alertas ou pendências registradas.`);
   }
 
-  if (recentOccurrences.some((occurrence) => occurrence.severity >= 4)) {
+  if (allOccurrences.some(({ occurrence }) => occurrence.severity >= 4)) {
     alerts.push("Há ocorrências de alta severidade que precisam de revisão imediata.");
   }
 
