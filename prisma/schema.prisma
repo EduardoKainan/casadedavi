@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  EMPLOYEE
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(EMPLOYEE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Patient {
+  id                       String               @id @default(uuid())
+  fullName                 String
+  birthDate                DateTime
+  cpf                      String               @unique
+  rg                       String
+  naturalness              String
+  nationality              String
+  maritalStatus            String
+  fatherName               String?
+  motherName               String?
+  profession               String?
+  hasChildren              Boolean              @default(false)
+  childrenCount            Int                  @default(0)
+  addressOrStreetSituation String
+  admissionDate            DateTime
+  
+  responsibles             ResponsiblePerson[]
+  hospitalizations         Hospitalization[]
+  medications              Medication[]
+  evolutionRecords         EvolutionRecord[]
+  documents                DocumentRecord[]
+
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+}
+
+enum ResponsibleType {
+  VOLUNTARY
+  FAMILY
+  OTHER
+}
+
+model ResponsiblePerson {
+  id           String          @id @default(uuid())
+  fullName     String
+  relationship String
+  phone        String
+  type         ResponsibleType @default(FAMILY)
+  
+  patientId    String
+  patient      Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+enum HospitalizationType {
+  VOLUNTARY
+  INVOLUNTARY
+}
+
+enum HospitalizationStatus {
+  INTERNED
+  DISCHARGED
+  DISCONNECTED
+  EVADED
+}
+
+enum ExitReason {
+  DISCHARGE
+  GIVE_UP
+  EXPULSION
+  OTHER
+}
+
+model Hospitalization {
+  id                String                @id @default(uuid())
+  type              HospitalizationType   @default(VOLUNTARY)
+  status            HospitalizationStatus @default(INTERNED)
+  admissionDate     DateTime
+  expectedExitDate  DateTime?
+  exitDate          DateTime?
+  exitReason        ExitReason?
+  finalObservations String?
+  
+  patientId         String
+  patient           Patient               @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+}
+
+model Medication {
+  id                String   @id @default(uuid())
+  name              String
+  dosage            String
+  frequency         String
+  responsibleDoctor String
+  isActive          Boolean  @default(true)
+  
+  patientId         String
+  patient           Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model EvolutionRecord {
+  id               String   @id @default(uuid())
+  observations     String
+  weeklyEvolution  String?
+  occurrences      String?
+  
+  patientId        String
+  patient          Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model DocumentRecord {
+  id          String   @id @default(uuid())
+  type        String   // RG, CPF, etc.
+  isDelivered Boolean  @default(false)
+  url         String?  // Reference to Supabase Storage
+  
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
