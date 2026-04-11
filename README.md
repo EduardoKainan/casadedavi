@@ -85,9 +85,30 @@ Adicionar no painel da Vercel:
 - [ ] Se houver migrations, rodar `npx prisma migrate deploy`
 - [ ] Confirmar que o projeto está apontando para dados reais, não apenas mocks
 
+## Banco e modelagem
+
+Arquivos adicionados para a próxima etapa:
+
+- `prisma/schema.prisma` → modelagem refatorada para operação real
+- `prisma/supabase-schema.sql` → script inicial para criação do banco no Supabase
+
+### Estrutura principal
+
+- `profiles`
+- `patients`
+- `responsible_people`
+- `admissions`
+- `medications`
+- `evolution_records`
+- `patient_documents`
+- `patient_occurrences`
+- `audit_logs`
+
 ## Próximos passos técnicos
 
-1. Substituir `mock-data` por leitura real via Prisma
-2. Criar CRUD real de pacientes
-3. Adicionar autenticação e perfis
-4. Implementar documentos, saída e auditoria
+1. Aplicar `prisma/supabase-schema.sql` no projeto Supabase
+2. Conectar `DATABASE_URL` e `DIRECT_URL` reais
+3. Substituir `mock-data` por leitura real via Prisma
+4. Criar CRUD real de pacientes
+5. Adicionar autenticação e perfis
+6. Implementar documentos, saída e auditoria

@@ -9,63 +9,15 @@ datasource db {
 enum UserRole {
   ADMIN
   EMPLOYEE
-}
-
-model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      UserRole @default(EMPLOYEE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Patient {
-  id                       String               @id @default(uuid())
-  fullName                 String
-  birthDate                DateTime
-  cpf                      String               @unique
-  rg                       String
-  naturalness              String
-  nationality              String
-  maritalStatus            String
-  fatherName               String?
-  motherName               String?
-  profession               String?
-  hasChildren              Boolean              @default(false)
-  childrenCount            Int                  @default(0)
-  addressOrStreetSituation String
-  admissionDate            DateTime
-  
-  responsibles             ResponsiblePerson[]
-  hospitalizations         Hospitalization[]
-  medications              Medication[]
-  evolutionRecords         EvolutionRecord[]
-  documents                DocumentRecord[]
-
-  createdAt                DateTime             @default(now())
-  updatedAt                DateTime             @updatedAt
+  NURSE
+  DOCTOR
+  SOCIAL_WORKER
 }
 
 enum ResponsibleType {
-  VOLUNTARY
   FAMILY
+  VOLUNTARY
   OTHER
-}
-
-model ResponsiblePerson {
-  id           String          @id @default(uuid())
-  fullName     String
-  relationship String
-  phone        String
-  type         ResponsibleType @default(FAMILY)
-  
-  patientId    String
-  patient      Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
 }
 
 enum HospitalizationType {
@@ -87,60 +39,230 @@ enum ExitReason {
   OTHER
 }
 
-model Hospitalization {
-  id                String                @id @default(uuid())
-  type              HospitalizationType   @default(VOLUNTARY)
-  status            HospitalizationStatus @default(INTERNED)
-  admissionDate     DateTime
-  expectedExitDate  DateTime?
-  exitDate          DateTime?
-  exitReason        ExitReason?
-  finalObservations String?
-  
-  patientId         String
-  patient           Patient               @relation(fields: [patientId], references: [id], onDelete: Cascade)
+enum DocumentType {
+  RG
+  CPF
+  SUS_CARD
+  MEDICAL_REPORT
+  ADMISSION_TERM
+  COURT_ORDER
+  OTHER
+}
 
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
+enum OccurrenceType {
+  CLINICAL
+  DISCIPLINARY
+  ADMINISTRATIVE
+  FAMILY
+  EMERGENCY
+  OTHER
+}
+
+model Profile {
+  id         String            @id @default(uuid()) @db.Uuid
+  fullName   String            @map("full_name")
+  email      String            @unique
+  passwordHash String?         @map("password_hash")
+  role       UserRole          @default(EMPLOYEE)
+  isActive   Boolean           @default(true) @map("is_active")
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  admissionsCreated Admission[]       @relation("AdmissionCreatedBy")
+  evolutionRecords   EvolutionRecord[]
+  occurrences        PatientOccurrence[]
+  auditLogs          AuditLog[]        @relation("AuditActor")
+
+  @@map("profiles")
+}
+
+model Patient {
+  id             String               @id @default(uuid()) @db.Uuid
+  fullName       String               @map("full_name")
+  socialName     String?              @map("social_name")
+  cpf            String               @unique
+  rg             String?
+  birthDate      DateTime             @map("birth_date") @db.Date
+  naturalness    String?
+  nationality    String?              @default("Brasileira")
+  maritalStatus  String?              @map("marital_status")
+  profession     String?
+  phone          String?
+  susCard        String?              @map("sus_card")
+  fatherName     String?              @map("father_name")
+  motherName     String?              @map("mother_name")
+  hasChildren    Boolean              @default(false) @map("has_children")
+  childrenCount  Int                  @default(0) @map("children_count")
+  addressLine    String?              @map("address_line")
+  neighborhood   String?
+  city           String?
+  state          String?
+  zipCode        String?              @map("zip_code")
+  addressNotes   String?              @map("address_notes")
+  generalNotes   String?              @map("general_notes")
+  isActive       Boolean              @default(true) @map("is_active")
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  responsibles   ResponsiblePerson[]
+  admissions     Admission[]
+  medications    Medication[]
+  evolutionRecords EvolutionRecord[]
+  documents      PatientDocument[]
+  occurrences    PatientOccurrence[]
+
+  @@index([fullName])
+  @@index([cpf])
+  @@map("patients")
+}
+
+model ResponsiblePerson {
+  id           String          @id @default(uuid()) @db.Uuid
+  patientId    String          @map("patient_id") @db.Uuid
+  fullName     String          @map("full_name")
+  relationship String
+  phone        String?
+  email        String?
+  type         ResponsibleType @default(FAMILY)
+  isPrimary    Boolean         @default(false) @map("is_primary")
+  notes        String?
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  patient      Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@map("responsible_people")
+}
+
+model Admission {
+  id                String                @id @default(uuid()) @db.Uuid
+  patientId         String                @map("patient_id") @db.Uuid
+  hospitalizationType HospitalizationType @default(VOLUNTARY) @map("hospitalization_type")
+  status            HospitalizationStatus @default(INTERNED)
+  admissionDate     DateTime              @map("admission_date") @db.Date
+  expectedExitDate  DateTime?             @map("expected_exit_date") @db.Date
+  exitDate          DateTime?             @map("exit_date") @db.Date
+  exitReason        ExitReason?           @map("exit_reason")
+  referralSource    String?               @map("referral_source")
+  diagnosis         String?
+  initialCondition  String?               @map("initial_condition")
+  finalObservations String?               @map("final_observations")
+  createdBy         String?               @map("created_by") @db.Uuid
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  patient           Patient               @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  creator           Profile?              @relation("AdmissionCreatedBy", fields: [createdBy], references: [id])
+  evolutionRecords  EvolutionRecord[]
+  medications       Medication[]
+  documents         PatientDocument[]
+  occurrences       PatientOccurrence[]
+
+  @@index([patientId])
+  @@index([status])
+  @@map("admissions")
 }
 
 model Medication {
-  id                String   @id @default(uuid())
+  id                String      @id @default(uuid()) @db.Uuid
+  patientId         String      @map("patient_id") @db.Uuid
+  admissionId       String?     @map("admission_id") @db.Uuid
   name              String
   dosage            String
   frequency         String
-  responsibleDoctor String
-  isActive          Boolean  @default(true)
-  
-  patientId         String
-  patient           Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  route             String?
+  responsibleDoctor String?     @map("responsible_doctor")
+  startDate         DateTime?   @map("start_date") @db.Date
+  endDate           DateTime?   @map("end_date") @db.Date
+  isActive          Boolean     @default(true) @map("is_active")
+  notes             String?
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  patient           Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  admission         Admission?  @relation(fields: [admissionId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([isActive])
+  @@map("medications")
 }
 
 model EvolutionRecord {
-  id               String   @id @default(uuid())
-  observations     String
-  weeklyEvolution  String?
-  occurrences      String?
-  
-  patientId        String
-  patient          Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  id              String      @id @default(uuid()) @db.Uuid
+  patientId       String      @map("patient_id") @db.Uuid
+  admissionId     String?     @map("admission_id") @db.Uuid
+  recordDate      DateTime    @default(now()) @map("record_date") @db.Timestamptz(6)
+  observations    String
+  weeklyEvolution String?     @map("weekly_evolution")
+  occurrences     String?
+  mood            String?
+  conductedBy     String?     @map("conducted_by") @db.Uuid
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  patient         Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  admission       Admission?  @relation(fields: [admissionId], references: [id], onDelete: SetNull)
+  profile         Profile?    @relation(fields: [conductedBy], references: [id])
+
+  @@index([patientId])
+  @@map("evolution_records")
 }
 
-model DocumentRecord {
-  id          String   @id @default(uuid())
-  type        String   // RG, CPF, etc.
-  isDelivered Boolean  @default(false)
-  url         String?  // Reference to Supabase Storage
-  
-  patientId   String
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+model PatientDocument {
+  id          String       @id @default(uuid()) @db.Uuid
+  patientId   String       @map("patient_id") @db.Uuid
+  admissionId String?      @map("admission_id") @db.Uuid
+  type        DocumentType @default(OTHER)
+  title       String
+  filePath    String?      @map("file_path")
+  fileUrl     String?      @map("file_url")
+  isDelivered Boolean      @default(false) @map("is_delivered")
+  deliveredAt DateTime?    @map("delivered_at") @db.Timestamptz(6)
+  notes       String?
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  admission   Admission?   @relation(fields: [admissionId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@map("patient_documents")
+}
+
+model PatientOccurrence {
+  id             String         @id @default(uuid()) @db.Uuid
+  patientId      String         @map("patient_id") @db.Uuid
+  admissionId    String?        @map("admission_id") @db.Uuid
+  occurrenceType OccurrenceType @default(OTHER) @map("occurrence_type")
+  title          String
+  description    String
+  severity       Int            @default(1)
+  occurredAt     DateTime       @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  createdBy      String?        @map("created_by") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  patient        Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  admission      Admission?     @relation(fields: [admissionId], references: [id], onDelete: SetNull)
+  creator        Profile?       @relation(fields: [createdBy], references: [id])
+
+  @@index([patientId])
+  @@map("patient_occurrences")
+}
+
+model AuditLog {
+  id         String    @id @default(uuid()) @db.Uuid
+  actorId    String?   @map("actor_id") @db.Uuid
+  entityName String    @map("entity_name")
+  entityId   String?   @map("entity_id") @db.Uuid
+  action     String
+  oldData    Json?     @map("old_data")
+  newData    Json?     @map("new_data")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  actor      Profile?  @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([entityName, entityId])
+  @@map("audit_logs")
 }
