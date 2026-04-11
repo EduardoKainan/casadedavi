@@ -117,7 +117,7 @@
 
 @media (max-width: 768px) {
   .app-header {
-    padding-left: 64px; /* Space for mobile menu btn */
+    padding-left: 64px;
   }
 
   .search-bar, .user-info {

@@ -1,0 +1,112 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.metric-card {
+  background-color: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.metric-icon-bg {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-icon-bg.tone-primary { background-color: rgba(14, 165, 233, 0.1); color: var(--primary); }
+.metric-icon-bg.tone-success { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
+.metric-icon-bg.tone-warning { background-color: rgba(245, 158, 11, 0.1); color: var(--warning); }
+.metric-icon-bg.tone-danger { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.activity-icon-sm {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.activity-icon-sm.success { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
+.activity-icon-sm.warning { background-color: rgba(245, 158, 11, 0.1); color: var(--warning); }
+.activity-icon-sm.danger { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); }
+.activity-icon-sm.primary { background-color: rgba(14, 165, 233, 0.1); color: var(--primary); }
+
+.activity-details p {
+  color: var(--text-main);
+  font-size: 0.9375rem;
+  margin-bottom: 2px;
+}
+
+.info-list {
+  list-style-type: disc;
+  padding-left: 20px;
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-list li {
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,66 +1,111 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { Users, UserPlus, LogOut, TrendingUp, Activity } from "lucide-react";
+import { MetricCard } from "@/components/metric-card";
+import { SectionCard } from "@/components/section-card";
+import { getDashboardData } from "@/lib/patient-service";
+import { DashboardMetric } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import "./dashboard.css";
 
-export default function Home() {
+async function getMetrics(): Promise<DashboardMetric[]> {
+  const data = await getDashboardData();
+
+  return [
+    {
+      icon: Users,
+      label: "Internos Ativos",
+      value: data.activePatients.toString(),
+      description: "Pacientes internados atualmente",
+      tone: "primary",
+    },
+    {
+      icon: UserPlus,
+      label: "Entradas no Mês",
+      value: data.monthlyAdmissions.toString(),
+      description: "Novas admissões neste mês",
+      tone: "success",
+    },
+    {
+      icon: LogOut,
+      label: "Saídas no Mês",
+      value: data.monthlyDischarges.toString(),
+      description: "Altas e encerramentos",
+      tone: "warning",
+    },
+    {
+      icon: TrendingUp,
+      label: "Taxa de Desistência",
+      value: `${data.dropoutRate}%`,
+      description: "Percentual de evasões",
+      tone: "danger",
+    },
+  ];
+}
+
+export default async function DashboardPage() {
+  const metrics = await getMetrics();
+  const data = await getDashboardData();
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h2>Visão Geral</h2>
+        <p className="text-muted">Acompanhe as métricas e indicadores da clínica.</p>
+      </div>
+
+      <div className="metrics-grid">
+        {metrics.map((metric, index) => (
+          <MetricCard key={index} {...metric} />
+        ))}
+      </div>
+
+      <div className="charts-grid">
+        <SectionCard
+          title="Atividade Recente"
+          description="Últimas ocorrências na clínica"
+          actions={<button className="btn btn-outline btn-sm">Ver Todos</button>}
+        >
+          <div className="activity-list">
+            {data.recentActivity.map((activity) => (
+              <div key={activity.id} className="activity-item">
+                <div
+                  className={cn(
+                    "activity-icon-sm",
+                    activity.type === "admission"
+                      ? "success"
+                      : activity.type === "evolution"
+                        ? "warning"
+                        : activity.type === "alert"
+                          ? "danger"
+                          : "primary",
+                  )}
+                >
+                  {activity.type === "admission" && <UserPlus size={16} />}
+                  {activity.type === "evolution" && <Activity size={16} />}
+                  {activity.type === "alert" && <TrendingUp size={16} />}
+                  {activity.type === "discharge" && <LogOut size={16} />}
+                </div>
+                <div className="activity-details">
+                  <p>{activity.description}</p>
+                  <span className="text-muted text-sm">
+                    {new Intl.DateTimeFormat("pt-BR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    }).format(new Date(activity.createdAt))}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Informações Importantes" description="Lembretes e avisos gerais">
+          <ul className="info-list">
+            {data.alerts.map((alert, index) => (
+              <li key={index}>{alert}</li>
+            ))}
+          </ul>
+        </SectionCard>
+      </div>
     </div>
   );
 }

@@ -88,7 +88,6 @@
   color: var(--danger);
 }
 
-/* Mobile Setup */
 .mobile-menu-btn {
   display: none;
   position: fixed;
