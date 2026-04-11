@@ -1,4 +1,7 @@
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 import { ArrowLeft, User, Pill, Activity, FileText, Settings, Download, AlertTriangle } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";

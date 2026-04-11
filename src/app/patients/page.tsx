@@ -1,4 +1,7 @@
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
+
 import { Plus, Search, Filter, Edit, FileText, Trash, AlertTriangle } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { PageIntro } from "@/components/page-intro";

@@ -5,8 +5,11 @@ export type ResponsibleContact = {
   id: string;
   fullName: string;
   relationship: string;
-  phone: string;
+  phone?: string;
+  email?: string;
   type: "FAMILY" | "VOLUNTARY" | "OTHER";
+  isPrimary?: boolean;
+  notes?: string;
 };
 
 export type MedicationItem = {
@@ -14,8 +17,12 @@ export type MedicationItem = {
   name: string;
   dosage: string;
   frequency: string;
-  responsibleDoctor: string;
+  route?: string;
+  responsibleDoctor?: string;
+  startDate?: string;
+  endDate?: string;
   isActive: boolean;
+  notes?: string;
 };
 
 export type EvolutionItem = {
@@ -24,6 +31,7 @@ export type EvolutionItem = {
   observations: string;
   weeklyEvolution?: string;
   occurrences?: string;
+  mood?: string;
 };
 
 export type TimelineItem = {
@@ -37,16 +45,28 @@ export type TimelineItem = {
 export type PatientRecord = {
   id: string;
   fullName: string;
+  socialName?: string;
   cpf: string;
-  rg: string;
+  rg?: string;
   birthDate: string;
-  maritalStatus: string;
-  nationality: string;
-  naturalness: string;
-  addressOrStreetSituation: string;
+  maritalStatus?: string;
+  nationality?: string;
+  naturalness?: string;
+  phone?: string;
   profession?: string;
   fatherName?: string;
   motherName?: string;
+  hasChildren?: boolean;
+  childrenCount?: number;
+  susCard?: string;
+  addressOrStreetSituation: string;
+  addressLine?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  addressNotes?: string;
+  generalNotes?: string;
   admissionDate: string;
   expectedExitDate?: string;
   hospitalizationType: HospitalizationTypeLabel;

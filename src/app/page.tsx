@@ -1,4 +1,7 @@
 import { Users, UserPlus, LogOut, TrendingUp, Activity, ShieldAlert, CalendarClock } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+
 import { MetricCard } from "@/components/metric-card";
 import { SectionCard } from "@/components/section-card";
 import { getDashboardData } from "@/lib/patient-service";
