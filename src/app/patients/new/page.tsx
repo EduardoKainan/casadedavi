@@ -1,155 +1,404 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowLeft, Save, ShieldCheck, UserPlus } from "lucide-react";
-import { PageIntro } from "@/components/page-intro";
-import { SectionCard } from "@/components/section-card";
-import "./form.css";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { createPatient, createAdmission, createResponsible } from "@/lib/patient-service";
+import { cn } from "@/lib/utils";
 
 export default function NewPatientPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const [form, setForm] = useState({
+    full_name: "",
+    social_name: "",
+    cpf: "",
+    rg: "",
+    birth_date: "",
+    marital_status: "",
+    nationality: "Brasileira",
+    naturalness: "",
+    phone: "",
+    profession: "",
+    father_name: "",
+    mother_name: "",
+    has_children: false,
+    children_count: 0,
+    sus_card: "",
+    address_line: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    zip_code: "",
+    address_notes: "",
+    general_notes: "",
+  });
+
+  const [admission, setAdmission] = useState({
+    hospitalization_type: "VOLUNTARY" as "VOLUNTARY" | "INVOLUNTARY",
+    admission_date: "",
+    expected_exit_date: "",
+    diagnosis: "",
+    initial_condition: "",
+    final_observations: "",
+  });
+
+  const [responsible, setResponsible] = useState({
+    full_name: "",
+    relationship: "",
+    phone: "",
+    email: "",
+    type: "FAMILY" as "FAMILY" | "VOLUNTARY" | "OTHER",
+    is_primary: true,
+    notes: "",
+  });
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+
+    if (name.startsWith("adm_")) {
+      const key = name.replace("adm_", "");
+      setAdmission((prev) => ({ ...prev, [key]: value }));
+    } else if (name.startsWith("resp_")) {
+      const key = name.replace("resp_", "");
+      setResponsible((prev) => ({ ...prev, [key]: type === "checkbox" ? checked : value }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1) Criar paciente
+      const patient = await createPatient(form);
+
+      // 2) Criar admissão
+      await createAdmission({
+        patient_id: patient.id,
+        hospitalization_type: admission.hospitalization_type,
+        admission_date: admission.admission_date,
+        expected_exit_date: admission.expected_exit_date || undefined,
+        diagnosis: admission.diagnosis || undefined,
+        initial_condition: admission.initial_condition || undefined,
+        final_observations: admission.final_observations || undefined,
+      });
+
+      // 3) Criar responsável (se preenchido)
+      if (responsible.full_name.trim()) {
+        await createResponsible({
+          patient_id: patient.id,
+          full_name: responsible.full_name,
+          relationship: responsible.relationship,
+          phone: responsible.phone || undefined,
+          email: responsible.email || undefined,
+          type: responsible.type,
+          is_primary: responsible.is_primary,
+          notes: responsible.notes || undefined,
+        });
+      }
+
+      setSuccess(true);
+      router.push(`/patients/${patient.id}`);
+    } catch (err: any) {
+      setError(err.message || "Erro ao salvar paciente.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="page-inner">
+        <div className="card" style={{ maxWidth: 640, margin: "40px auto" }}>
+          <div className="empty-panel">
+            <div className="empty-panel-icon">
+              <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <h3>Paciente cadastrado com sucesso</h3>
+            <p>Redirecionando para o prontuário...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="form-container">
-      <div className="header-breadcrumbs">
-        <Link href="/patients" className="back-link">
-          <ArrowLeft size={18} />
-          <span>Voltar para Lista</span>
-        </Link>
-      </div>
-
-      <PageIntro
-        title="Cadastrar Novo Interno"
-        description="Preencha os dados essenciais para iniciar a jornada do paciente com prontuário estruturado."
-        actions={
-          <button type="submit" form="new-patient-form" className="btn btn-primary">
-            <Save size={18} />
-            <span>Salvar Cadastro</span>
+    <div className="page-inner">
+      <div className="page-header">
+        <div>
+          <h2>Novo Paciente</h2>
+          <p className="text-muted">Preencha os dados do paciente e admissão inicial.</p>
+        </div>
+        <div className="header-actions">
+          <Link href="/patients" className="btn btn-outline">Cancelar</Link>
+          <button type="submit" form="patient-form" className="btn btn-primary" disabled={loading}>
+            {loading ? "Salvando..." : "Salvar Paciente"}
           </button>
-        }
-      />
-
-      <div className="form-highlight-grid">
-        <div className="card highlight-card">
-          <UserPlus size={18} />
-          <div>
-            <strong>Cadastro inicial rápido</strong>
-            <p className="text-muted">Priorize os campos mínimos para registrar a entrada sem travar a operação.</p>
-          </div>
-        </div>
-        <div className="card highlight-card">
-          <ShieldCheck size={18} />
-          <div>
-            <strong>Dados sensíveis</strong>
-            <p className="text-muted">Esse fluxo deve evoluir com autenticação, auditoria e controle de acesso por perfil.</p>
-          </div>
         </div>
       </div>
 
-      <form id="new-patient-form" className="form-wrapper">
-        <SectionCard title="Dados Pessoais do Interno" description="Identificação civil e contexto social básico.">
-          <div className="form-grid">
-            <div className="form-group col-span-2">
-              <label>Nome Completo*</label>
-              <input type="text" required placeholder="Digite o nome completo" />
+      {error && (
+        <div className="card" style={{ borderColor: "var(--danger)", background: "rgba(220,38,38,0.04)" }}>
+          <p style={{ color: "var(--danger)" }}>{error}</p>
+        </div>
+      )}
+
+      <form id="patient-form" onSubmit={handleSubmit}>
+        <div className="card" style={{ marginBottom: 20 }}>
+          <h3 style={{ marginBottom: 16 }}>Dados Pessoais</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Nome completo *
+              </label>
+              <input
+                name="full_name"
+                value={form.full_name}
+                onChange={handleChange}
+                required
+                style={inputStyle}
+                placeholder="Nome completo"
+              />
             </div>
-            <div className="form-group">
-              <label>Data de Nascimento*</label>
-              <input type="date" required />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Nome social
+              </label>
+              <input name="social_name" value={form.social_name} onChange={handleChange} style={inputStyle} placeholder="Nome social (opcional)" />
             </div>
-            <div className="form-group">
-              <label>CPF*</label>
-              <input type="text" required placeholder="000.000.000-00" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                CPF *
+              </label>
+              <input name="cpf" value={form.cpf} onChange={handleChange} required style={inputStyle} placeholder="000.000.000-00" />
             </div>
-            <div className="form-group">
-              <label>RG*</label>
-              <input type="text" required placeholder="Apenas números" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                RG
+              </label>
+              <input name="rg" value={form.rg} onChange={handleChange} style={inputStyle} placeholder="00.000.000-0" />
             </div>
-            <div className="form-group">
-              <label>Naturalidade</label>
-              <input type="text" placeholder="Ex: Goiânia - GO" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Data de nascimento *
+              </label>
+              <input name="birth_date" value={form.birth_date} onChange={handleChange} type="date" required style={inputStyle} />
             </div>
-            <div className="form-group">
-              <label>Nacionalidade</label>
-              <input type="text" placeholder="Ex: Brasileira" defaultValue="Brasileira" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Estado civil
+              </label>
+              <input name="marital_status" value={form.marital_status} onChange={handleChange} style={inputStyle} placeholder="Solteiro, Casado..." />
             </div>
-            <div className="form-group">
-              <label>Estado Civil</label>
-              <select>
-                <option value="">Selecione...</option>
-                <option value="solteiro">Solteiro(a)</option>
-                <option value="casado">Casado(a)</option>
-                <option value="divorciado">Divorciado(a)</option>
-                <option value="viuvo">Viúvo(a)</option>
-              </select>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Nacionalidade
+              </label>
+              <input name="nationality" value={form.nationality} onChange={handleChange} style={inputStyle} placeholder="Brasileira" />
             </div>
-            <div className="form-group">
-              <label>Nome da Mãe*</label>
-              <input type="text" required placeholder="Nome completo da mãe" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Naturalidade
+              </label>
+              <input name="naturalness" value={form.naturalness} onChange={handleChange} style={inputStyle} placeholder="Cidade - UF" />
             </div>
-            <div className="form-group">
-              <label>Nome do Pai</label>
-              <input type="text" placeholder="Nome completo do pai" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Telefone
+              </label>
+              <input name="phone" value={form.phone} onChange={handleChange} style={inputStyle} placeholder="(00) 00000-0000" />
             </div>
-            <div className="form-group">
-              <label>Profissão</label>
-              <input type="text" placeholder="Profissão atual ou anterior" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Profissão
+              </label>
+              <input name="profession" value={form.profession} onChange={handleChange} style={inputStyle} placeholder="Profissão" />
             </div>
-            <div className="form-group">
-              <label>Filhos</label>
-              <select>
-                <option value="false">Não</option>
-                <option value="true">Sim</option>
-              </select>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Nome do pai
+              </label>
+              <input name="father_name" value={form.father_name} onChange={handleChange} style={inputStyle} placeholder="Nome do pai" />
             </div>
-            <div className="form-group col-span-2">
-              <label>Endereço ou Situação de Rua*</label>
-              <input type="text" required placeholder="Rua, número, bairro, CEP ou descrição da situação" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Nome da mãe
+              </label>
+              <input name="mother_name" value={form.mother_name} onChange={handleChange} style={inputStyle} placeholder="Nome da mãe" />
+            </div>
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.8125rem", fontWeight: 600 }}>
+                <input type="checkbox" name="has_children" checked={form.has_children} onChange={handleChange} />
+                Tem filhos?
+              </label>
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Quantidade de filhos
+              </label>
+              <input name="children_count" value={form.children_count} onChange={handleChange} type="number" min="0" style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Cartão SUS
+              </label>
+              <input name="sus_card" value={form.sus_card} onChange={handleChange} style={inputStyle} placeholder="Número do cartão SUS" />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Endereço
+              </label>
+              <input name="address_line" value={form.address_line} onChange={handleChange} style={inputStyle} placeholder="Logradouro, número, complemento" />
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Bairro
+              </label>
+              <input name="neighborhood" value={form.neighborhood} onChange={handleChange} style={inputStyle} placeholder="Bairro" />
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Cidade
+              </label>
+              <input name="city" value={form.city} onChange={handleChange} style={inputStyle} placeholder="Cidade" />
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Estado
+              </label>
+              <input name="state" value={form.state} onChange={handleChange} style={inputStyle} placeholder="UF" maxLength={2} />
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                CEP
+              </label>
+              <input name="zip_code" value={form.zip_code} onChange={handleChange} style={inputStyle} placeholder="00000-000" />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Observações gerais
+              </label>
+              <textarea name="general_notes" value={form.general_notes} onChange={handleChange} rows={3} style={{ ...inputStyle, resize: "vertical" }} placeholder="Observações adicionais" />
             </div>
           </div>
-        </SectionCard>
+        </div>
 
-        <SectionCard title="Dados da Internação" description="Informações operacionais da entrada do paciente.">
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Tipo de Internação*</label>
-              <select required>
+        <div className="card" style={{ marginBottom: 20 }}>
+          <h3 style={{ marginBottom: 16 }}>Admissão</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Tipo de internação
+              </label>
+              <select name="adm_hospitalization_type" value={admission.hospitalization_type} onChange={handleChange} required style={inputStyle}>
                 <option value="VOLUNTARY">Voluntária</option>
                 <option value="INVOLUNTARY">Involuntária</option>
               </select>
             </div>
-            <div className="form-group">
-              <label>Data de Entrada*</label>
-              <input type="date" required />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Data de entrada *
+              </label>
+              <input name="adm_admission_date" value={admission.admission_date} onChange={handleChange} type="date" required style={inputStyle} />
             </div>
-            <div className="form-group">
-              <label>Previsão de Saída</label>
-              <input type="date" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Previsão de saída
+              </label>
+              <input name="adm_expected_exit_date" value={admission.expected_exit_date} onChange={handleChange} type="date" style={inputStyle} />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Diagnóstico inicial
+              </label>
+              <textarea name="adm_diagnosis" value={admission.diagnosis} onChange={handleChange} rows={2} style={{ ...inputStyle, resize: "vertical" }} placeholder="Diagnóstico ou motivo da internação" />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Condição inicial
+              </label>
+              <textarea name="adm_initial_condition" value={admission.initial_condition} onChange={handleChange} rows={2} style={{ ...inputStyle, resize: "vertical" }} placeholder="Estado clínico na admissão" />
             </div>
           </div>
-        </SectionCard>
+        </div>
 
-        <SectionCard title="Responsável pela Internação" description="Contato principal para comunicação e suporte documental.">
-          <div className="form-grid">
-            <div className="form-group col-span-2">
-              <label>Nome do Responsável*</label>
-              <input type="text" required placeholder="Nome completo" />
+        <div className="card" style={{ marginBottom: 20 }}>
+          <h3 style={{ marginBottom: 16 }}>Responsável Principal</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Nome completo
+              </label>
+              <input name="resp_full_name" value={responsible.full_name} onChange={handleChange} style={inputStyle} placeholder="Nome do responsável" />
             </div>
-            <div className="form-group">
-              <label>Parentesco / Vínculo*</label>
-              <input type="text" required placeholder="Ex: Mãe, Esposa, Amigo" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Parentesco
+              </label>
+              <input name="resp_relationship" value={responsible.relationship} onChange={handleChange} style={inputStyle} placeholder="Mãe, Pai, Irmão..." />
             </div>
-            <div className="form-group">
-              <label>Telefone*</label>
-              <input type="tel" required placeholder="(00) 00000-0000" />
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Telefone
+              </label>
+              <input name="resp_phone" value={responsible.phone} onChange={handleChange} style={inputStyle} placeholder="(00) 00000-0000" />
             </div>
-            <div className="form-group">
-              <label>Tipo de Responsável*</label>
-              <select required>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Email
+              </label>
+              <input name="resp_email" value={responsible.email} onChange={handleChange} type="email" style={inputStyle} placeholder="email@exemplo.com" />
+            </div>
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.8125rem", fontWeight: 600 }}>
+                <input type="checkbox" name="resp_is_primary" checked={responsible.is_primary} onChange={handleChange} />
+                Principal
+              </label>
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Tipo
+              </label>
+              <select name="resp_type" value={responsible.type} onChange={handleChange} style={inputStyle}>
                 <option value="FAMILY">Familiar</option>
-                <option value="VOLUNTARY">Voluntário (Amigo/Conhecido)</option>
-                <option value="OTHER">Outro (Justiça, Clínica)</option>
+                <option value="VOLUNTARY">Voluntário</option>
+                <option value="OTHER">Outro</option>
               </select>
             </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", marginBottom: 6, fontSize: "0.8125rem", fontWeight: 600 }}>
+                Observações
+              </label>
+              <textarea name="resp_notes" value={responsible.notes} onChange={handleChange} rows={2} style={{ ...inputStyle, resize: "vertical" }} placeholder="Observações sobre o responsável" />
+            </div>
           </div>
-        </SectionCard>
+        </div>
       </form>
     </div>
   );
 }
+
+const inputStyle = {
+  width: "100%",
+  padding: "10px 14px",
+  borderRadius: "8px",
+  border: "1px solid var(--border)",
+  fontSize: "0.875rem",
+  background: "rgba(255,255,255,0.8)",
+  transition: "border-color 0.2s, box-shadow 0.2s",
+  outline: "none",
+};
