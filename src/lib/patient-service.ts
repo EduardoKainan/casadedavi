@@ -108,7 +108,7 @@ function toPatientRecord(patient: PatientRow & {
   const admissions = [...(patient.admissions ?? [])].sort(
     (a, b) => new Date(b.admission_date).getTime() - new Date(a.admission_date).getTime(),
   );
-  const latestAdmission = admissions[0];
+  const latestAdmission = admissions && admissions.length > 0 ? admissions[0] : undefined;
 
   const responsibles = [...(patient.responsible_people ?? [])].sort((a, b) => {
     const primaryDiff = Number(Boolean(b.is_primary)) - Number(Boolean(a.is_primary));

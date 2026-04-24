@@ -78,6 +78,7 @@ export default function NewPatientPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(false);
 
     try {
       // 1) Criar paciente
@@ -109,31 +110,58 @@ export default function NewPatientPage() {
       }
 
       setSuccess(true);
+      // Redireciona para o detalhe do paciente recém-criado
       router.push(`/patients/${patient.id}`);
     } catch (err: any) {
-      setError(err.message || "Erro ao salvar paciente.");
+      setError(err.message || "Erro ao salvar paciente. Tente novamente.");
+      setSuccess(false);
     } finally {
       setLoading(false);
     }
   }
 
-  if (success) {
-    return (
-      <div className="page-inner">
-        <div className="card" style={{ maxWidth: 640, margin: "40px auto" }}>
-          <div className="empty-panel">
-            <div className="empty-panel-icon">
-              <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-            </div>
-            <h3>Paciente cadastrado com sucesso</h3>
-            <p>Redirecionando para o prontuário...</p>
-          </div>
-        </div>
-      </div>
-    );
+  function resetForm() {
+    setForm({
+      full_name: "",
+      social_name: "",
+      cpf: "",
+      rg: "",
+      birth_date: "",
+      marital_status: "",
+      nationality: "Brasileira",
+      naturalness: "",
+      phone: "",
+      profession: "",
+      father_name: "",
+      mother_name: "",
+      has_children: false,
+      children_count: 0,
+      sus_card: "",
+      address_line: "",
+      neighborhood: "",
+      city: "",
+      state: "",
+      zip_code: "",
+      address_notes: "",
+      general_notes: "",
+    });
+    setAdmission({
+      hospitalization_type: "VOLUNTARY",
+      admission_date: "",
+      expected_exit_date: "",
+      diagnosis: "",
+      initial_condition: "",
+      final_observations: "",
+    });
+    setResponsible({
+      full_name: "",
+      relationship: "",
+      phone: "",
+      email: "",
+      type: "FAMILY",
+      is_primary: true,
+      notes: "",
+    });
   }
 
   return (
@@ -153,11 +181,17 @@ export default function NewPatientPage() {
 
       {error && (
         <div className="card" style={{ borderColor: "var(--danger)", background: "rgba(220,38,38,0.04)" }}>
-          <p style={{ color: "var(--danger)" }}>{error}</p>
+          <p style={{ color: "var(--danger)", margin: 0 }}>{error}</p>
         </div>
       )}
 
-      <form id="patient-form" onSubmit={handleSubmit}>
+      {success && (
+        <div className="card" style={{ borderColor: "var(--success)", background: "rgba(21,128,61,0.04)" }}>
+          <p style={{ color: "var(--success)", margin: 0 }}>Paciente cadastrado com sucesso. Redirecionando...</p>
+        </div>
+      )}
+
+      <form id="patient-form" onSubmit={handleSubmit} onReset={(e) => { e.preventDefault(); resetForm(); }}>
         <div className="card" style={{ marginBottom: 20 }}>
           <h3 style={{ marginBottom: 16 }}>Dados Pessoais</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -386,6 +420,13 @@ export default function NewPatientPage() {
               <textarea name="resp_notes" value={responsible.notes} onChange={handleChange} rows={2} style={{ ...inputStyle, resize: "vertical" }} placeholder="Observações sobre o responsável" />
             </div>
           </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+          <button type="reset" className="btn btn-outline">Limpar</button>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? "Salvando..." : "Salvar Paciente"}
+          </button>
         </div>
       </form>
     </div>

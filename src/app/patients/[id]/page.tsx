@@ -30,13 +30,13 @@ export default async function PatientDetailPage({
   const { id } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const activeTab = resolvedSearchParams?.tab ?? "info";
-  const patient = await findPatient(id);
+  const patientRaw = await findPatient(id);
 
-  if (!patient) {
+  if (!patientRaw) {
     notFound();
   }
 
-  const view = toPatientDetailView(patient);
+  const view = toPatientDetailView(patientRaw);
 
   return (
     <div className="detail-container">
@@ -107,35 +107,35 @@ export default async function PatientDetailPage({
                 </div>
                 <div className="data-item">
                   <span className="data-label">RG</span>
-                  <span className="data-value">{view.rg}</span>
+                  <span className="data-value">{view.rg || "Não informado"}</span>
                 </div>
                 <div className="data-item">
                   <span className="data-label">Data de Nascimento</span>
-                  <span className="data-value">{view.birthDateFormatted} ({view.age} anos)</span>
+                  <span className="data-value">{view.birthDateFormatted || "Não informada"} ({view.age || "?"} anos)</span>
                 </div>
                 <div className="data-item">
                   <span className="data-label">Estado Civil</span>
-                  <span className="data-value">{view.maritalStatus}</span>
+                  <span className="data-value">{view.maritalStatus || "Não informado"}</span>
                 </div>
                 <div className="data-item">
                   <span className="data-label">Naturalidade</span>
-                  <span className="data-value">{view.naturalness}</span>
+                  <span className="data-value">{view.naturalness || "Não informada"}</span>
                 </div>
                 <div className="data-item">
                   <span className="data-label">Nacionalidade</span>
-                  <span className="data-value">{view.nationality}</span>
+                  <span className="data-value">{view.nationality || "Não informada"}</span>
                 </div>
                 <div className="data-item">
                   <span className="data-label">Profissão</span>
-                  <span className="data-value">{view.profession ?? "Não informada"}</span>
+                  <span className="data-value">{view.profession || "Não informada"}</span>
                 </div>
                 <div className="data-item">
                   <span className="data-label">Mãe</span>
-                  <span className="data-value">{view.motherName ?? "Não informada"}</span>
+                  <span className="data-value">{view.motherName || "Não informada"}</span>
                 </div>
                 <div className="data-item col-span-2">
                   <span className="data-label">Endereço / Situação</span>
-                  <span className="data-value">{view.addressOrStreetSituation}</span>
+                  <span className="data-value">{view.addressOrStreetSituation || "Não informado"}</span>
                 </div>
               </div>
             </SectionCard>
@@ -144,17 +144,17 @@ export default async function PatientDetailPage({
               <div className="data-list">
                 <div className="data-item">
                   <span className="data-label">Data de Entrada</span>
-                  <span className="data-value">{view.admissionDateFormatted}</span>
+                  <span className="data-value">{view.admissionDateFormatted || "Não informada"}</span>
                 </div>
                 <div className="data-item">
                   <span className="data-label">Previsão de Saída</span>
-                  <span className="data-value">{view.expectedExitDateFormatted}</span>
+                  <span className="data-value">{view.expectedExitDateFormatted || "Não definida"}</span>
                 </div>
                 <div className="data-item col-span-2">
                   <span className="data-label">Responsável principal</span>
                   <span className="data-value">
                     {view.mainResponsible
-                      ? `${view.mainResponsible.fullName} (${view.mainResponsible.relationship}) - ${view.mainResponsible.phone}`
+                      ? `${view.mainResponsible.fullName} (${view.mainResponsible.relationship}) - ${view.mainResponsible.phone || "sem telefone"}`
                       : "Não informado"}
                   </span>
                 </div>
@@ -169,7 +169,7 @@ export default async function PatientDetailPage({
             description="Medicamentos ativos e histórico de prescrição"
             actions={<button className="btn btn-primary btn-sm">Adicionar Medicação</button>}
           >
-            {view.medications.length > 0 ? (
+            {view.medications && view.medications.length > 0 ? (
               <table className="data-table">
                 <thead>
                   <tr>
@@ -186,7 +186,7 @@ export default async function PatientDetailPage({
                       <td>{medication.name}</td>
                       <td>{medication.dosage}</td>
                       <td>{medication.frequency}</td>
-                      <td>{medication.responsibleDoctor}</td>
+                      <td>{medication.responsibleDoctor || "—"}</td>
                       <td>
                         <StatusBadge tone={medication.isActive ? "success" : "warning"}>
                           {medication.isActive ? "Ativo" : "Inativo"}
@@ -208,7 +208,7 @@ export default async function PatientDetailPage({
 
         {activeTab === "evolution" && (
           <SectionCard title="Evolução clínica" description="Ocorrências, observações e progresso terapêutico">
-            {view.evolutions.length > 0 ? (
+            {view.evolutions && view.evolutions.length > 0 ? (
               <div className="timeline-list">
                 {view.evolutions.map((item) => (
                   <article key={item.id} className="timeline-item-card">
