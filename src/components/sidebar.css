@@ -216,9 +216,10 @@
   display: none;
   position: fixed;
   inset: 0;
-  background-color: rgba(2, 6, 23, 0.5);
+  background-color: rgba(2, 6, 23, 0.72);
   z-index: 50;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   opacity: 0;
   transition: opacity 0.25s ease;
 }
@@ -226,6 +227,24 @@
 .sidebar-overlay.active {
   opacity: 1;
 }
+
+@media (max-width: 768px) {
+  .sidebar-overlay.active {
+    background-color: rgba(2, 6, 23, 0.8);
+  }
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    background: linear-gradient(180deg, #0b1020 0%, #0d1424 100%);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04);
+  }
+}
+
 
 @media (max-width: 900px) {
   .sidebar {
