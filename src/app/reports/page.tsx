@@ -1,18 +1,7 @@
-"use client";
-
-import { useState } from "react";
-import {
-  Download,
-  FileText,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Clock,
-  Calendar,
-  BarChart3,
-} from "lucide-react";
-import { SectionCard } from "@/components/section-card";
+import { Download, FileText, TrendingUp, TrendingDown, Users, Clock, Calendar, BarChart3 } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
+import { SectionCard } from "@/components/section-card";
+import { getReportsData } from "@/lib/patient-service";
 import { cn } from "@/lib/utils";
 import "./reports.css";
 
@@ -24,47 +13,47 @@ const periods = [
   { label: "Personalizado", value: "custom" },
 ];
 
-const mockData = {
-  admissions: 47,
-  discharges: 32,
-  evasions: 5,
-  avgStay: 42, // dias
-  occupancyRate: 73, // %
-  medicationsGiven: 1847,
-  evolutionsRecorded: 312,
+const reportTypes: Record<string, string> = {
+  mensal: "Mensal",
+  trimestral: "Trimestral",
+  especial: "Especial",
 };
 
-const monthlyData = [
-  { month: "Jan", admissions: 12, discharges: 8, evasions: 1 },
-  { month: "Fev", admissions: 15, discharges: 10, evasions: 0 },
-  { month: "Mar", admissions: 18, discharges: 14, evasions: 2 },
-  { month: "Abr", admissions: 11, discharges: 9, evasions: 1 },
-  { month: "Mai", admissions: 14, discharges: 11, evasions: 0 },
-  { month: "Jun", admissions: 16, discharges: 13, evasions: 1 },
-];
+const reportBadges: Record<string, string> = {
+  mensal: "badge-mensal",
+  trimestral: "badge-trimestral",
+  especial: "badge-especial",
+};
 
-const recentReports = [
-  { id: 1, title: "Relatório Mensal - Março 2026", date: "2026-04-01", type: "mensal" },
-  { id: 2, title: "Relatório Trimestral - Q1 2026", date: "2026-04-05", type: "trimestral" },
-  { id: 3, title: "Relatório de Evasão - Análise", date: "2026-04-10", type: "especial" },
-];
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
+  const params = await searchParams;
+  const period = params.period || "month";
+  
+  const data = await getReportsData(period);
 
-export default function ReportsPage() {
-  const [selectedPeriod, setSelectedPeriod] = useState("month");
+  const recentReports = [
+    { id: 1, title: "Relatório Mensal - Março 2026", date: "2026-04-01", type: "mensal" },
+    { id: 2, title: "Relatório Trimestral - Q1 2026", date: "2026-04-05", type: "trimestral" },
+    { id: 3, title: "Relatório de Evasão - Análise", date: "2026-04-10", type: "especial" },
+  ];
 
   return (
     <div className="reports-container">
-      {/* Header com filtros */}
+      {/* Period selector */}
       <div className="reports-header">
         <div className="period-selector">
-          {periods.map((period) => (
-            <button
-              key={period.value}
-              className={cn("period-btn", selectedPeriod === period.value && "active")}
-              onClick={() => setSelectedPeriod(period.value)}
+          {periods.map((p) => (
+            <a
+              key={p.value}
+              href={`?period=${p.value}`}
+              className={cn("period-btn", period === p.value && "active")}
             >
-              {period.label}
-            </button>
+              {p.label}
+            </a>
           ))}
         </div>
 
@@ -74,47 +63,44 @@ export default function ReportsPage() {
         </button>
       </div>
 
-      {/* Métricas principais */}
+      {/* Metrics */}
       <div className="metrics-grid">
         <MetricCard
           icon={Users}
           label="Internações"
-          value={mockData.admissions.toString()}
+          value={data.admissions.toString()}
           description="Total de admissões no período"
           tone="primary"
         />
         <MetricCard
           icon={TrendingUp}
           label="Altas"
-          value={mockData.discharges.toString()}
+          value={data.discharges.toString()}
           description="Pacientes liberados"
           tone="success"
         />
         <MetricCard
           icon={TrendingDown}
           label="Evasões"
-          value={mockData.evasions.toString()}
+          value={data.evasions.toString()}
           description="Desligamentos não programados"
           tone="danger"
         />
         <MetricCard
           icon={Clock}
           label="Permanência média"
-          value={`${mockData.avgStay} dias`}
+          value={`${data.avgStay} dias`}
           description="Tempo médio de internação"
           tone="warning"
         />
       </div>
 
-      {/* Gráfico + Ocupação */}
+      {/* Charts */}
       <div className="charts-grid">
-        <SectionCard
-          title="Evolução mensal"
-          description="Admissões, altas e evasões por mês"
-        >
+        <SectionCard title="Evolução mensal" description="Admissões, altas e evasões por mês">
           <div className="chart-container">
-            {monthlyData.map((item) => {
-              const maxVal = Math.max(...monthlyData.map((d) => d.admissions));
+            {data.monthlyData.map((item) => {
+              const maxVal = Math.max(...data.monthlyData.map((d) => d.admissions), 1);
               return (
                 <div key={item.month} className="chart-bar-group">
                   <div className="chart-bars">
@@ -150,10 +136,7 @@ export default function ReportsPage() {
           </div>
         </SectionCard>
 
-        <SectionCard
-          title="Taxa de ocupação"
-          description="Capacidade assistencial da unidade"
-        >
+        <SectionCard title="Taxa de ocupação" description="Capacidade assistencial da unidade">
           <div className="occupancy-display">
             <div className="occupancy-circle">
               <svg viewBox="0 0 120 120">
@@ -169,33 +152,33 @@ export default function ReportsPage() {
                   cx="60"
                   cy="60"
                   r="50"
-                  strokeDasharray={`${mockData.occupancyRate * 3.14} 314`}
+                  strokeDasharray={`${data.occupancyRate * 3.14} 314`}
                 />
               </svg>
               <div className="occupancy-value">
-                <strong>{mockData.occupancyRate}%</strong>
+                <strong>{data.occupancyRate}%</strong>
                 <span>Ocupação</span>
               </div>
             </div>
             <div className="occupancy-details">
               <div className="occupancy-stat">
                 <span className="stat-label">Vagas ocupadas</span>
-                <strong>22</strong>
+                <strong>{data.activeCount}</strong>
               </div>
               <div className="occupancy-stat">
                 <span className="stat-label">Vagas disponíveis</span>
-                <strong>8</strong>
+                <strong>{data.capacity - data.activeCount}</strong>
               </div>
               <div className="occupancy-stat">
                 <span className="stat-label">Capacidade total</span>
-                <strong>30</strong>
+                <strong>{data.capacity}</strong>
               </div>
             </div>
           </div>
         </SectionCard>
       </div>
 
-      {/* Relatórios recentes + Atividade */}
+      {/* Bottom */}
       <div className="reports-bottom">
         <SectionCard
           title="Relatórios gerados"
@@ -215,31 +198,28 @@ export default function ReportsPage() {
                     {new Date(report.date).toLocaleDateString("pt-BR")}
                   </span>
                 </div>
-                <span className={cn("report-badge", `badge-${report.type}`)}>
-                  {report.type}
+                <span className={cn("report-badge", reportBadges[report.type])}>
+                  {reportTypes[report.type]}
                 </span>
               </div>
             ))}
           </div>
         </SectionCard>
 
-        <SectionCard
-          title="Resumo operacional"
-          description="Indicadores do período selecionado"
-        >
+        <SectionCard title="Resumo operacional" description="Indicadores do período selecionado">
           <div className="summary-list">
             <div className="summary-item">
               <BarChart3 size={18} />
               <div>
                 <span className="summary-label">Medicações administradas</span>
-                <strong>{mockData.medicationsGiven}</strong>
+                <strong>{data.medicationsGiven}</strong>
               </div>
             </div>
             <div className="summary-item">
               <FileText size={18} />
               <div>
                 <span className="summary-label">Evoluções registradas</span>
-                <strong>{mockData.evolutionsRecorded}</strong>
+                <strong>{data.evolutionsRecorded}</strong>
               </div>
             </div>
             <div className="summary-item">

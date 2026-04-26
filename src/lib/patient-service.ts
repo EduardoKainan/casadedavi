@@ -378,6 +378,122 @@ export async function createResponsible(data: {
   return responsible;
 }
 
+export async function getReportsData(period: string = "month") {
+  const supabase = getSupabaseClient();
+  
+  const now = new Date();
+  let startDate: Date;
+  
+  switch (period) {
+    case "today":
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      break;
+    case "week":
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case "year":
+      startDate = new Date(now.getFullYear(), 0, 1);
+      break;
+    case "custom":
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case "month":
+    default:
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+  }
+
+  const { data: patients } = await supabase
+    .from("patients")
+    .select("*")
+    .gte("created_at", startDate.toISOString());
+
+  const { data: admissions } = await supabase
+    .from("admissions")
+    .select("*")
+    .gte("created_at", startDate.toISOString());
+
+  const { data: medications } = await supabase
+    .from("medications")
+    .select("*")
+    .gte("created_at", startDate.toISOString());
+
+  const { data: evolutions } = await supabase
+    .from("evolution_records")
+    .select("*")
+    .gte("created_at", startDate.toISOString());
+
+  const { data: activeAdmissions } = await supabase
+    .from("admissions")
+    .select("*")
+    .eq("status", "INTERNED");
+
+  const totalAdmissions = admissions?.length ?? 0;
+  const discharges = admissions?.filter((a) => a.status === "DISCHARGED").length ?? 0;
+  const evasions = admissions?.filter((a) => a.status === "EVADED").length ?? 0;
+  const activeCount = activeAdmissions?.length ?? 0;
+
+  // Calcular permanência média
+  let avgStay = 0;
+  const completedAdmissions = admissions?.filter((a) => a.exit_date) ?? [];
+  if (completedAdmissions.length > 0) {
+    const totalDays = completedAdmissions.reduce((sum, a) => {
+      const admission = new Date(a.admission_date);
+      const exit = new Date(a.exit_date!);
+      return sum + Math.ceil((exit.getTime() - admission.getTime()) / (1000 * 60 * 60 * 24));
+    }, 0);
+    avgStay = Math.round(totalDays / completedAdmissions.length);
+  }
+
+  // Taxa de ocupação (assumindo capacidade de 30)
+  const capacity = 30;
+  const occupancyRate = Math.min(Math.round((activeCount / capacity) * 100), 100);
+
+  // Dados mensais para gráfico (últimos 6 meses)
+  const monthlyData = [];
+  for (let i = 5; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+    
+    const monthAdmissions = admissions?.filter((a) => {
+      const date = new Date(a.admission_date);
+      return date >= monthDate && date <= monthEnd;
+    }).length ?? 0;
+    
+    const monthDischarges = admissions?.filter((a) => {
+      if (!a.exit_date || a.status !== "DISCHARGED") return false;
+      const date = new Date(a.exit_date);
+      return date >= monthDate && date <= monthEnd;
+    }).length ?? 0;
+    
+    const monthEvasions = admissions?.filter((a) => {
+      if (!a.exit_date || a.status !== "EVADED") return false;
+      const date = new Date(a.exit_date);
+      return date >= monthDate && date <= monthEnd;
+    }).length ?? 0;
+
+    monthlyData.push({
+      month: monthDate.toLocaleDateString("pt-BR", { month: "short" }),
+      admissions: monthAdmissions,
+      discharges: monthDischarges,
+      evasions: monthEvasions,
+    });
+  }
+
+  return {
+    admissions: totalAdmissions,
+    discharges,
+    evasions,
+    avgStay,
+    occupancyRate,
+    activeCount,
+    capacity,
+    medicationsGiven: medications?.length ?? 0,
+    evolutionsRecorded: evolutions?.length ?? 0,
+    monthlyData,
+  };
+}
+
 export async function getDashboardData(): Promise<DashboardSummary> {
   const patients = await fetchPatientsWithRelations();
   const parsedPatients = patients.map(toPatientRecord);
