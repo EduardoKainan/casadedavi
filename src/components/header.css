@@ -1,29 +1,32 @@
+/* ─── HEADER BASE ─── */
 .app-header {
-  height: var(--header-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 28px;
+  height: 64px;
+  padding: 0 24px;
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(248, 250, 252, 0.92);
+  background: rgba(248, 250, 252, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(219, 228, 232, 0.6);
+  gap: 16px;
 }
 
-/* ─── ESQUERDA: título ─── */
+/* ─── ESQUERDA ─── */
 .header-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  flex: 1 1 auto;
   min-width: 0;
-  flex-shrink: 1;
 }
 
 .mobile-menu-trigger {
   display: none;
+  flex-shrink: 0;
   width: 36px;
   height: 36px;
   align-items: center;
@@ -33,7 +36,6 @@
   color: var(--primary-strong);
   border: none;
   cursor: pointer;
-  flex-shrink: 0;
 }
 
 .page-title-row {
@@ -44,10 +46,10 @@
 }
 
 .page-title {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-main);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -63,11 +65,11 @@
   text-overflow: ellipsis;
 }
 
-/* ─── DIREITA: ações ─── */
+/* ─── DIREITA ─── */
 .header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -79,9 +81,10 @@
   background: rgba(255, 255, 255, 0.95);
   border-radius: 12px;
   padding: 8px 14px;
-  width: 260px;
+  width: 240px;
   border: 1px solid var(--border);
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .search-bar:focus-within {
@@ -112,10 +115,12 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .mobile-search-trigger {
   display: none;
+  flex-shrink: 0;
 }
 
 .quick-status {
@@ -128,6 +133,7 @@
   color: var(--success);
   font-size: 0.75rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .quick-status-dot {
@@ -214,18 +220,38 @@
   white-space: nowrap;
 }
 
-/* ─── RESPONSIVO ─── */
+/* ─── TABLET ─── */
 @media (max-width: 1024px) {
   .search-bar {
     width: 200px;
   }
 }
 
+/* ─── MOBILE (< 900px) ─── */
 @media (max-width: 900px) {
+  .app-header {
+    padding: 0 16px;
+    height: 56px;
+    gap: 12px;
+  }
+
+  .mobile-menu-trigger {
+    display: flex;
+  }
+
+  .page-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .page-subtitle {
+    display: none;
+  }
+
   .search-bar {
     display: none;
     position: absolute;
-    top: calc(var(--header-height) + 4px);
+    top: 60px;
     left: 12px;
     right: 12px;
     width: auto;
@@ -255,28 +281,19 @@
   }
 }
 
-@media (max-width: 768px) {
+/* ─── SMALL MOBILE ─── */
+@media (max-width: 420px) {
   .app-header {
-    padding: 0 16px;
-    height: 56px;
-  }
-
-  .mobile-menu-trigger {
-    display: flex;
-    width: 34px;
-    height: 34px;
+    padding: 0 12px;
+    gap: 8px;
   }
 
   .page-title {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-size: 0.9375rem;
   }
 
-  .page-subtitle {
-    display: none;
-  }
-
-  .icon-btn {
+  .icon-btn,
+  .mobile-menu-trigger {
     width: 34px;
     height: 34px;
   }
@@ -284,15 +301,5 @@
   .user-avatar-wrap {
     width: 32px;
     height: 32px;
-  }
-}
-
-@media (max-width: 420px) {
-  .app-header {
-    padding: 0 12px;
-  }
-
-  .page-title {
-    font-size: 0.95rem;
   }
 }
