@@ -4,43 +4,25 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 20px;
+  padding: 14px 28px;
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: rgba(248, 250, 252, 0.95);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(219, 228, 232, 0.72);
-}
-
-@media (max-width: 768px) {
-  .app-header {
-    background: rgba(248, 250, 252, 0.96);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom-color: rgba(219, 228, 232, 0.5);
-  }
-}
-
-@media (max-width: 420px) {
-  .app-header {
-    padding: 10px 14px;
-  }
+  z-index: 40;
+  background: rgba(248, 250, 252, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(219, 228, 232, 0.6);
 }
 
 .header-left {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
-  flex: 1;
 }
 
 .mobile-menu-trigger {
   display: none;
-  flex: 0 0 auto;
   width: 40px;
   height: 40px;
   align-items: center;
@@ -50,6 +32,7 @@
   color: var(--primary-strong);
   border: none;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .page-title-row {
@@ -60,28 +43,23 @@
 }
 
 .page-title {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--text-main);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .page-subtitle {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 0;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-shrink: 0;
 }
 
@@ -89,21 +67,18 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 14px;
   padding: 10px 16px;
   width: 280px;
   border: 1px solid var(--border);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   transition: all 0.2s ease;
-  flex-shrink: 0;
 }
 
 .search-bar:focus-within {
-  border-color: rgba(15, 118, 110, 0.5);
-  background-color: var(--surface-strong);
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
-  width: 320px;
+  border-color: rgba(15, 118, 110, 0.4);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
 }
 
 .search-icon {
@@ -127,20 +102,23 @@
 .header-actions-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+.mobile-search-trigger {
+  display: none;
 }
 
 .quick-status {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 12px;
-  background: rgba(21, 128, 61, 0.1);
+  background: rgba(21, 128, 61, 0.08);
   color: var(--success);
   font-size: 0.75rem;
   font-weight: 700;
-  white-space: nowrap;
 }
 
 .quick-status-dot {
@@ -150,34 +128,53 @@
   background: currentColor;
 }
 
+.icon-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--primary-strong);
+}
+
 .notification-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 9px;
-  height: 9px;
-  background-color: var(--danger);
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
   border-radius: 50%;
-  font-size: 0;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
 }
 
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding-left: 12px;
   border-left: 1px solid var(--border);
 }
 
 .user-avatar-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(15, 118, 110, 0.14), rgba(15, 118, 110, 0.06));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(15, 118, 110, 0.04));
 }
 
 .user-avatar {
@@ -185,55 +182,37 @@
 }
 
 .user-info {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
-@media (min-width: 900px) {
-  .user-info {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .user-name {
-    font-size: 0.8125rem;
-    font-weight: 700;
-    color: var(--text-main);
-  }
-
-  .user-role {
-    font-size: 0.6875rem;
-    color: var(--text-muted);
-  }
-
-  .search-bar {
-    width: 320px;
-  }
+.user-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
-@media (min-width: 1024px) {
-  .search-bar {
-    width: 360px;
-  }
+.user-role {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
 }
 
+/* ─── MOBILE ─── */
 @media (max-width: 768px) {
   .app-header {
-    padding: 12px 14px;
+    padding: 10px 16px;
+    min-height: 52px;
     gap: 10px;
-    min-height: 56px;
-    background: rgba(248, 250, 252, 0.96);
   }
 
   .mobile-menu-trigger {
     display: flex;
   }
 
-  .header-left {
-    gap: 10px;
-  }
-
   .page-title {
-    font-size: 0.9375rem;
+    font-size: 1rem;
+    font-weight: 700;
   }
 
   .page-subtitle {
@@ -243,15 +222,19 @@
   .search-bar {
     display: none;
     position: absolute;
-    top: 60px;
+    top: 56px;
     left: 12px;
     right: 12px;
     width: auto;
-    z-index: 40;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    z-index: 35;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
   }
 
   .app-header.search-active .search-bar {
+    display: flex;
+  }
+
+  .mobile-search-trigger {
     display: flex;
   }
 
@@ -259,38 +242,32 @@
     display: none;
   }
 
-  .header-actions-group {
-    gap: 6px;
-  }
-
-  .notification-badge {
-    top: 6px;
-    right: 6px;
-    width: 8px;
-    height: 8px;
-  }
-
   .user-profile {
-    padding-left: 8px;
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .user-info {
+    display: none;
   }
 
   .user-avatar-wrap {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
   }
 }
 
 @media (max-width: 420px) {
   .app-header {
-    padding: 10px 12px;
-    gap: 8px;
+    padding: 8px 12px;
   }
 
   .page-title {
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
   }
 
-  .search-bar:focus-within {
-    width: auto;
+  .icon-btn {
+    width: 36px;
+    height: 36px;
   }
 }

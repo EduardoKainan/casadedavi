@@ -28,25 +28,28 @@ export function Header() {
 
   return (
     <header className={cn("app-header", searchOpen && "search-active")}>
-      <button
-        className="mobile-menu-trigger icon-btn"
-        aria-label="Abrir menu"
-        onClick={() => {
-          const event = new CustomEvent("toggle-sidebar");
-          window.dispatchEvent(event);
-        }}
-      >
-        <Menu size={20} />
-      </button>
-
+      {/* Lado esquerdo: menu + título */}
       <div className="header-left">
+        <button
+          className="mobile-menu-trigger"
+          aria-label="Abrir menu"
+          onClick={() => {
+            const event = new CustomEvent("toggle-sidebar");
+            window.dispatchEvent(event);
+          }}
+        >
+          <Menu size={20} />
+        </button>
+
         <div className="page-title-row">
-          <h1 className={cn("page-title", pathname === "/" && "home-title")}>{title}</h1>
+          <h1 className="page-title">{title}</h1>
           <p className="page-subtitle">{subtitle}</p>
         </div>
       </div>
 
+      {/* Lado direito: ações */}
       <div className="header-right">
+        {/* Busca desktop */}
         <div className="search-bar">
           <Search size={18} className="search-icon" />
           <input
@@ -59,7 +62,9 @@ export function Header() {
           />
         </div>
 
+        {/* Ações */}
         <div className="header-actions-group">
+          {/* Busca mobile */}
           <button
             className="icon-btn mobile-search-trigger"
             aria-label="Buscar"
@@ -68,17 +73,20 @@ export function Header() {
             <Search size={20} />
           </button>
 
+          {/* Status sistema */}
           <div className="quick-status">
             <span className="quick-status-dot" />
             Sistema
           </div>
 
+          {/* Notificações */}
           <button className="icon-btn" aria-label="Notificações">
             <Bell size={20} />
-            <span className="notification-badge">3</span>
+            <span className="notification-badge" />
           </button>
         </div>
 
+        {/* Perfil */}
         <div className="user-profile">
           <div className="user-avatar-wrap">
             <UserCircle size={22} className="user-avatar" />
