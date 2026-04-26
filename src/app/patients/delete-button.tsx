@@ -17,7 +17,7 @@ export function DeleteButton({ id, name }: { id: string; name: string }) {
     setDeleting(true);
     try {
       await deletePatient(id);
-      router.refresh();
+      window.location.reload();
     } catch (error) {
       console.error("Erro ao excluir paciente:", error);
       alert("Erro ao excluir paciente. Tente novamente.");
