@@ -40,7 +40,7 @@ export function Sidebar() {
 
   return (
     <>
-      <div className="sidebar-overlay active" onClick={() => setIsOpen(false)} aria-hidden={!isOpen} />
+      <div className={cn("sidebar-overlay", isOpen && "active")} onClick={() => setIsOpen(false)} aria-hidden={!isOpen} />
 
       <aside className={cn("sidebar", isOpen && "open")} aria-hidden={!isOpen}>
         <div className="sidebar-header">

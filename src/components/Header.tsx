@@ -1,9 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, Search, UserCircle } from "lucide-react";
+import { Bell, Search, UserCircle, Menu } from "lucide-react";
 import { ROUTE_TITLES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const routeDescriptions: Record<string, string> = {
   "/": "Monitore ocupação, alertas e pendências operacionais em tempo real.",
@@ -15,6 +16,7 @@ const routeDescriptions: Record<string, string> = {
 
 export function Header() {
   const pathname = usePathname();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const title = ROUTE_TITLES[pathname] ||
     (pathname.startsWith("/patients/") ? "Prontuário do paciente" : "Casa de Davi");
@@ -25,10 +27,23 @@ export function Header() {
       : "Gestão assistencial e administrativa da unidade.");
 
   return (
-    <header className="app-header">
+    <header className={cn("app-header", searchOpen && "search-active")}>
+      <button
+        className="mobile-menu-trigger icon-btn"
+        aria-label="Abrir menu"
+        onClick={() => {
+          const event = new CustomEvent("toggle-sidebar");
+          window.dispatchEvent(event);
+        }}
+      >
+        <Menu size={20} />
+      </button>
+
       <div className="header-left">
-        <h1 className={cn("page-title", pathname === "/" && "home-title")}>{title}</h1>
-        <p className="page-subtitle">{subtitle}</p>
+        <div className="page-title-row">
+          <h1 className={cn("page-title", pathname === "/" && "home-title")}>{title}</h1>
+          <p className="page-subtitle">{subtitle}</p>
+        </div>
       </div>
 
       <div className="header-right">
@@ -45,9 +60,17 @@ export function Header() {
         </div>
 
         <div className="header-actions-group">
+          <button
+            className="icon-btn mobile-search-trigger"
+            aria-label="Buscar"
+            onClick={() => setSearchOpen(!searchOpen)}
+          >
+            <Search size={20} />
+          </button>
+
           <div className="quick-status">
             <span className="quick-status-dot" />
-            Sistema operacional
+            Sistema
           </div>
 
           <button className="icon-btn" aria-label="Notificações">
@@ -62,7 +85,7 @@ export function Header() {
           </div>
           <div className="user-info">
             <span className="user-name">Administrador</span>
-            <span className="user-role">Equipe gestora</span>
+            <span className="user-role">Gestão</span>
           </div>
         </div>
       </div>
