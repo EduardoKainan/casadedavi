@@ -353,6 +353,59 @@ export async function createAdmission(data: {
   return admission;
 }
 
+export async function updatePatient(id: string, data: Partial<{
+  full_name: string;
+  social_name?: string;
+  cpf: string;
+  rg?: string;
+  birth_date: string;
+  marital_status?: string;
+  nationality?: string;
+  naturalness?: string;
+  phone?: string;
+  profession?: string;
+  father_name?: string;
+  mother_name?: string;
+  has_children?: boolean;
+  children_count?: number;
+  sus_card?: string;
+  address_line?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  address_notes?: string;
+  general_notes?: string;
+}>) {
+  const supabase = getSupabaseClient();
+
+  const { data: patient, error } = await supabase
+    .from("patients")
+    .update(data)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Erro ao atualizar paciente: ${error.message}`);
+  }
+
+  return patient;
+}
+
+export async function deletePatient(id: string) {
+  const supabase = getSupabaseClient();
+
+  const { error } = await supabase
+    .from("patients")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(`Erro ao excluir paciente: ${error.message}`);
+  }
+}
+
 export async function createResponsible(data: {
   patient_id: string;
   full_name: string;

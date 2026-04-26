@@ -59,7 +59,9 @@ export default async function PatientDetailPage({
             <Download size={18} />
             <span>Exportar Prontuário</span>
           </button>
-          <button className="btn btn-primary">Editar Cadastro</button>
+          <Link href={`/patients/${id}/edit`} className="btn btn-primary">
+            Editar Cadastro
+          </Link>
         </div>
       </div>
 

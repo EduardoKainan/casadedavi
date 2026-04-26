@@ -258,6 +258,109 @@ body::selection {
   font-size: 0.8125rem;
 }
 
+/* ─── FORMULÁRIOS ─── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.form-input {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 0.875rem;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: rgba(15, 118, 110, 0.4);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
+}
+
+.form-input::placeholder {
+  color: var(--text-soft);
+}
+
+select.form-input {
+  cursor: pointer;
+}
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.grid {
+  display: grid;
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.gap-6 {
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  .md\:col-span-2 {
+    grid-column: span 2 / span 2;
+  }
+}
+
+.max-w-4xl {
+  max-width: 896px;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.border-t {
+  border-top: 1px solid var(--border);
+}
+
+.pt-6 {
+  padding-top: 24px;
+}
+
+.mt-8 {
+  margin-top: 32px;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ─── METRIC CARD (global) ─── */
 .metrics-grid {
   display: grid;

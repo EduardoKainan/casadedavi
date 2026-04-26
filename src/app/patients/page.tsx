@@ -2,7 +2,8 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-import { Plus, Search, Filter, Edit, FileText, Trash, AlertTriangle } from "lucide-react";
+import { Plus, Search, Filter, Edit, FileText, AlertTriangle } from "lucide-react";
+import { DeleteButton } from "./delete-button";
 import { EmptyState } from "@/components/empty-state";
 import { PageIntro } from "@/components/page-intro";
 import { StatusBadge } from "@/components/status-badge";
@@ -144,12 +145,10 @@ export default async function PatientsPage() {
                         <Link href={`/patients/${r.id}`} className="icon-btn" title="Ver prontuário">
                           <FileText size={18} />
                         </Link>
-                        <button className="icon-btn text-primary" title="Editar paciente">
+                        <Link href={`/patients/${r.id}/edit`} className="icon-btn text-primary" title="Editar paciente">
                           <Edit size={18} />
-                        </button>
-                        <button className="icon-btn text-danger" title="Excluir paciente">
-                          <Trash size={18} />
-                        </button>
+                        </Link>
+                        <DeleteButton id={r.id} name={r.fullName} />
                       </div>
                     </td>
                   </tr>
