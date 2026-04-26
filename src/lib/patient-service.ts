@@ -396,6 +396,28 @@ export async function updatePatient(id: string, data: Partial<{
 export async function deletePatient(id: string) {
   const supabase = getSupabaseClient();
 
+  // Deletar registros relacionados primeiro (ordem importa por causa das FKs)
+  const tables = [
+    "patient_occurrences",
+    "patient_documents",
+    "evolution_records",
+    "medications",
+    "admissions",
+    "responsible_people",
+  ];
+
+  for (const table of tables) {
+    const { error } = await supabase
+      .from(table)
+      .delete()
+      .eq("patient_id", id);
+
+    if (error) {
+      console.warn(`Erro ao deletar de ${table}:`, error.message);
+    }
+  }
+
+  // Deletar o paciente
   const { error } = await supabase
     .from("patients")
     .delete()
