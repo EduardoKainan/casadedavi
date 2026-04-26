@@ -257,3 +257,111 @@ body::selection {
   padding: 8px 12px;
   font-size: 0.8125rem;
 }
+
+/* ─── METRIC CARD (global) ─── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.metric-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.90));
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.metric-icon-bg {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metric-icon-bg.tone-primary { background-color: rgba(15, 118, 110, 0.12); color: var(--primary); }
+.metric-icon-bg.tone-success { background-color: rgba(21, 128, 61, 0.12); color: var(--success); }
+.metric-icon-bg.tone-warning { background-color: rgba(217, 119, 6, 0.14); color: var(--warning); }
+.metric-icon-bg.tone-danger { background-color: rgba(220, 38, 38, 0.12); color: var(--danger); }
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.metric-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.metric-description {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ─── CHARTS GRID (global) ─── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .metric-card {
+    padding: 16px;
+  }
+
+  .metric-icon-bg {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
