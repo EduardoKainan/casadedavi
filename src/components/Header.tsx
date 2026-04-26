@@ -28,7 +28,7 @@ export function Header() {
 
   return (
     <header className={cn("app-header", searchOpen && "search-active")}>
-      {/* Lado esquerdo: menu + título */}
+      {/* Esquerda */}
       <div className="header-left">
         <button
           className="mobile-menu-trigger"
@@ -38,7 +38,7 @@ export function Header() {
             window.dispatchEvent(event);
           }}
         >
-          <Menu size={20} />
+          <Menu size={18} />
         </button>
 
         <div className="page-title-row">
@@ -47,41 +47,38 @@ export function Header() {
         </div>
       </div>
 
-      {/* Lado direito: ações */}
+      {/* Direita */}
       <div className="header-right">
         {/* Busca desktop */}
         <div className="search-bar">
-          <Search size={18} className="search-icon" />
+          <Search size={16} className="search-icon" />
           <input
             type="text"
             placeholder={pathname === "/"
-              ? "Buscar paciente, documento ou pendência..."
+              ? "Buscar paciente, documento..."
               : pathname.startsWith("/patients/")
-                ? "Buscar registro clínico ou responsável..."
+                ? "Buscar registro clínico..."
                 : "Buscar no sistema..."}
           />
         </div>
 
         {/* Ações */}
         <div className="header-actions-group">
-          {/* Busca mobile */}
           <button
             className="icon-btn mobile-search-trigger"
             aria-label="Buscar"
             onClick={() => setSearchOpen(!searchOpen)}
           >
-            <Search size={20} />
+            <Search size={18} />
           </button>
 
-          {/* Status sistema */}
           <div className="quick-status">
             <span className="quick-status-dot" />
             Sistema
           </div>
 
-          {/* Notificações */}
           <button className="icon-btn" aria-label="Notificações">
-            <Bell size={20} />
+            <Bell size={18} />
             <span className="notification-badge" />
           </button>
         </div>
@@ -89,7 +86,7 @@ export function Header() {
         {/* Perfil */}
         <div className="user-profile">
           <div className="user-avatar-wrap">
-            <UserCircle size={22} className="user-avatar" />
+            <UserCircle size={20} className="user-avatar" />
           </div>
           <div className="user-info">
             <span className="user-name">Administrador</span>

@@ -1,10 +1,9 @@
 .app-header {
-  min-height: var(--header-height);
+  height: var(--header-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px 28px;
+  padding: 0 28px;
   position: sticky;
   top: 0;
   z-index: 40;
@@ -14,20 +13,22 @@
   border-bottom: 1px solid rgba(219, 228, 232, 0.6);
 }
 
+/* ─── ESQUERDA: título ─── */
 .header-left {
   display: flex;
   align-items: center;
   gap: 14px;
   min-width: 0;
+  flex-shrink: 1;
 }
 
 .mobile-menu-trigger {
   display: none;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(15, 118, 110, 0.08);
   color: var(--primary-strong);
   border: none;
@@ -48,31 +49,38 @@
   color: var(--text-main);
   letter-spacing: -0.03em;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .page-subtitle {
   font-size: 0.8125rem;
   color: var(--text-muted);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* ─── DIREITA: ações ─── */
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
+/* Busca */
 .search-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 14px;
-  padding: 10px 16px;
-  width: 280px;
+  border-radius: 12px;
+  padding: 8px 14px;
+  width: 260px;
   border: 1px solid var(--border);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   transition: all 0.2s ease;
 }
 
@@ -99,10 +107,11 @@
   color: var(--text-soft);
 }
 
+/* Ações */
 .header-actions-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .mobile-search-trigger {
@@ -113,8 +122,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: 12px;
+  padding: 6px 10px;
+  border-radius: 10px;
   background: rgba(21, 128, 61, 0.08);
   color: var(--success);
   font-size: 0.75rem;
@@ -130,17 +139,18 @@
 
 .icon-btn {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 10px;
   color: var(--text-muted);
   background: transparent;
   border: none;
   cursor: pointer;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .icon-btn:hover {
@@ -150,31 +160,34 @@
 
 .notification-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
   background: var(--danger);
   border-radius: 50%;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
 }
 
+/* Perfil */
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding-left: 12px;
+  gap: 8px;
+  padding-left: 10px;
   border-left: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .user-avatar-wrap {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(15, 118, 110, 0.04));
+  flex-shrink: 0;
 }
 
 .user-avatar {
@@ -184,50 +197,40 @@
 .user-info {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 0;
+  min-width: 0;
 }
 
 .user-name {
   font-size: 0.8125rem;
   font-weight: 700;
   color: var(--text-main);
+  white-space: nowrap;
 }
 
 .user-role {
   font-size: 0.6875rem;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
-/* ─── MOBILE ─── */
-@media (max-width: 768px) {
-  .app-header {
-    padding: 10px 16px;
-    min-height: 52px;
-    gap: 10px;
+/* ─── RESPONSIVO ─── */
+@media (max-width: 1024px) {
+  .search-bar {
+    width: 200px;
   }
+}
 
-  .mobile-menu-trigger {
-    display: flex;
-  }
-
-  .page-title {
-    font-size: 1rem;
-    font-weight: 700;
-  }
-
-  .page-subtitle {
-    display: none;
-  }
-
+@media (max-width: 900px) {
   .search-bar {
     display: none;
     position: absolute;
-    top: 56px;
+    top: calc(var(--header-height) + 4px);
     left: 12px;
     right: 12px;
     width: auto;
     z-index: 35;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
   }
 
   .app-header.search-active .search-bar {
@@ -242,32 +245,54 @@
     display: none;
   }
 
-  .user-profile {
-    padding-left: 0;
-    border-left: none;
-  }
-
   .user-info {
     display: none;
   }
 
+  .user-profile {
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0 16px;
+    height: 56px;
+  }
+
+  .mobile-menu-trigger {
+    display: flex;
+    width: 34px;
+    height: 34px;
+  }
+
+  .page-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .page-subtitle {
+    display: none;
+  }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
   .user-avatar-wrap {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
 }
 
 @media (max-width: 420px) {
   .app-header {
-    padding: 8px 12px;
+    padding: 0 12px;
   }
 
   .page-title {
-    font-size: 0.9375rem;
-  }
-
-  .icon-btn {
-    width: 36px;
-    height: 36px;
+    font-size: 0.95rem;
   }
 }
