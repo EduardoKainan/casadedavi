@@ -384,10 +384,16 @@ export async function updatePatient(id: string, data: Partial<{
     .update(data)
     .eq("id", id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Erro ao atualizar paciente: ${error.message}`);
+  }
+
+  if (!patient) {
+    throw new Error(
+      "Paciente não encontrado ou sem permissão para atualizar. Verifique se SUPABASE_SERVICE_ROLE_KEY está configurada na Vercel.",
+    );
   }
 
   return patient;
