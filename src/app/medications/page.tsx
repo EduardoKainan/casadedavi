@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
   Plus,
   Search,
@@ -11,10 +10,8 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  Calendar,
   User,
 } from "lucide-react";
-import { SectionCard } from "@/components/section-card";
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
 import { getSupabaseClient } from "@/lib/supabase";
@@ -37,8 +34,11 @@ type Medication = {
   created_at: string;
 };
 
+type MedicationRow = Omit<Medication, "patient_name"> & {
+  patients?: { full_name?: string | null } | null;
+};
+
 export default function MedicationsPage() {
-  const router = useRouter();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -78,7 +78,7 @@ export default function MedicationsPage() {
 
       if (error) throw error;
 
-      const formatted = (data || []).map((item: any) => ({
+      const formatted: Medication[] = ((data || []) as MedicationRow[]).map((item) => ({
         ...item,
         patient_name: item.patients?.full_name || "Desconhecido",
       }));

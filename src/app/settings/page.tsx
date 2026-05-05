@@ -21,11 +21,7 @@ const tabs = [
   { id: "security", label: "Segurança", icon: Shield },
 ] as const;
 
-export default function SettingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tab?: string }>;
-}) {
+export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("unit");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);

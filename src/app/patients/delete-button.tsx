@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash, Loader2 } from "lucide-react";
-import { deletePatient } from "@/lib/patient-service";
 
 export function DeleteButton({ id, name }: { id: string; name: string }) {
   const router = useRouter();
@@ -16,11 +15,17 @@ export function DeleteButton({ id, name }: { id: string; name: string }) {
 
     setDeleting(true);
     try {
-      await deletePatient(id);
-      window.location.reload();
+      const response = await fetch(`/api/patients/${id}`, { method: "DELETE" });
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro ao excluir paciente. Tente novamente.");
+      }
+
+      router.refresh();
     } catch (error) {
       console.error("Erro ao excluir paciente:", error);
-      alert("Erro ao excluir paciente. Tente novamente.");
+      alert(error instanceof Error ? error.message : "Erro ao excluir paciente. Tente novamente.");
     } finally {
       setDeleting(false);
     }

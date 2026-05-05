@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createPatient, createAdmission, createResponsible } from "@/lib/patient-service";
-import { cn } from "@/lib/utils";
 
 export default function NewPatientPage() {
   const router = useRouter();
@@ -81,39 +79,43 @@ export default function NewPatientPage() {
     setSuccess(false);
 
     try {
-      // 1) Criar paciente
-      const patient = await createPatient(form);
-
-      // 2) Criar admissão
-      await createAdmission({
-        patient_id: patient.id,
-        hospitalization_type: admission.hospitalization_type,
-        admission_date: admission.admission_date,
-        expected_exit_date: admission.expected_exit_date || undefined,
-        diagnosis: admission.diagnosis || undefined,
-        initial_condition: admission.initial_condition || undefined,
-        final_observations: admission.final_observations || undefined,
+      const response = await fetch("/api/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patient: form,
+          admission: {
+            hospitalization_type: admission.hospitalization_type,
+            admission_date: admission.admission_date,
+            expected_exit_date: admission.expected_exit_date || undefined,
+            diagnosis: admission.diagnosis || undefined,
+            initial_condition: admission.initial_condition || undefined,
+            final_observations: admission.final_observations || undefined,
+          },
+          responsible: responsible.full_name.trim()
+            ? {
+                full_name: responsible.full_name,
+                relationship: responsible.relationship,
+                phone: responsible.phone || undefined,
+                email: responsible.email || undefined,
+                type: responsible.type,
+                is_primary: responsible.is_primary,
+                notes: responsible.notes || undefined,
+              }
+            : undefined,
+        }),
       });
 
-      // 3) Criar responsável (se preenchido)
-      if (responsible.full_name.trim()) {
-        await createResponsible({
-          patient_id: patient.id,
-          full_name: responsible.full_name,
-          relationship: responsible.relationship,
-          phone: responsible.phone || undefined,
-          email: responsible.email || undefined,
-          type: responsible.type,
-          is_primary: responsible.is_primary,
-          notes: responsible.notes || undefined,
-        });
+      const result = (await response.json().catch(() => ({}))) as { id?: string; error?: string };
+
+      if (!response.ok || !result.id) {
+        throw new Error(result.error || "Erro ao salvar paciente. Tente novamente.");
       }
 
       setSuccess(true);
-      // Redireciona para o detalhe do paciente recém-criado
-      router.push(`/patients/${patient.id}`);
-    } catch (err: any) {
-      setError(err.message || "Erro ao salvar paciente. Tente novamente.");
+      router.push(`/patients/${result.id}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao salvar paciente. Tente novamente.");
       setSuccess(false);
     } finally {
       setLoading(false);

@@ -478,11 +478,6 @@ export async function getReportsData(period: string = "month") {
       break;
   }
 
-  const { data: patients } = await supabase
-    .from("patients")
-    .select("*")
-    .gte("created_at", startDate.toISOString());
-
   const { data: admissions } = await supabase
     .from("admissions")
     .select("*")

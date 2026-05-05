@@ -34,10 +34,6 @@ export function Sidebar() {
     return () => window.removeEventListener("toggle-sidebar", handleToggle);
   }, []);
 
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
-
   return (
     <>
       <div className={cn("sidebar-overlay", isOpen && "active")} onClick={() => setIsOpen(false)} aria-hidden={!isOpen} />

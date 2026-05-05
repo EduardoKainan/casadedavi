@@ -1,75 +1,160 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
-import { findPatient, updatePatient } from "@/lib/patient-service";
-import { useEffect } from "react";
+
+type EditPatientFormData = {
+  full_name: string;
+  social_name: string;
+  cpf: string;
+  rg: string;
+  birth_date: string;
+  marital_status: string;
+  nationality: string;
+  naturalness: string;
+  phone: string;
+  profession: string;
+  father_name: string;
+  mother_name: string;
+  has_children: boolean;
+  children_count: number;
+  sus_card: string;
+  address_line: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  address_notes: string;
+  general_notes: string;
+};
+
+type PatientResponse = {
+  id: string;
+  fullName: string;
+  socialName?: string;
+  cpf: string;
+  rg?: string;
+  birthDate: string;
+  maritalStatus?: string;
+  nationality?: string;
+  naturalness?: string;
+  phone?: string;
+  profession?: string;
+  fatherName?: string;
+  motherName?: string;
+  hasChildren?: boolean;
+  childrenCount?: number;
+  susCard?: string;
+  addressLine?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  addressNotes?: string;
+  generalNotes?: string;
+};
+
+const initialFormData: EditPatientFormData = {
+  full_name: "",
+  social_name: "",
+  cpf: "",
+  rg: "",
+  birth_date: "",
+  marital_status: "",
+  nationality: "",
+  naturalness: "",
+  phone: "",
+  profession: "",
+  father_name: "",
+  mother_name: "",
+  has_children: false,
+  children_count: 0,
+  sus_card: "",
+  address_line: "",
+  neighborhood: "",
+  city: "",
+  state: "",
+  zip_code: "",
+  address_notes: "",
+  general_notes: "",
+};
+
+function toFormData(patient: PatientResponse): EditPatientFormData {
+  return {
+    full_name: patient.fullName,
+    social_name: patient.socialName || "",
+    cpf: patient.cpf,
+    rg: patient.rg || "",
+    birth_date: patient.birthDate,
+    marital_status: patient.maritalStatus || "",
+    nationality: patient.nationality || "",
+    naturalness: patient.naturalness || "",
+    phone: patient.phone || "",
+    profession: patient.profession || "",
+    father_name: patient.fatherName || "",
+    mother_name: patient.motherName || "",
+    has_children: patient.hasChildren || false,
+    children_count: patient.childrenCount || 0,
+    sus_card: patient.susCard || "",
+    address_line: patient.addressLine || "",
+    neighborhood: patient.neighborhood || "",
+    city: patient.city || "",
+    state: patient.state || "",
+    zip_code: patient.zipCode || "",
+    address_notes: patient.addressNotes || "",
+    general_notes: patient.generalNotes || "",
+  };
+}
 
 export default function EditPatientPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [id, setId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    full_name: "",
-    social_name: "",
-    cpf: "",
-    rg: "",
-    birth_date: "",
-    marital_status: "",
-    nationality: "",
-    naturalness: "",
-    phone: "",
-    profession: "",
-    father_name: "",
-    mother_name: "",
-    has_children: false,
-    children_count: 0,
-    sus_card: "",
-    address_line: "",
-    neighborhood: "",
-    city: "",
-    state: "",
-    zip_code: "",
-    address_notes: "",
-    general_notes: "",
-  });
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<EditPatientFormData>(initialFormData);
 
   useEffect(() => {
-    params.then(({ id }) => {
-      setId(id);
-      findPatient(id).then((patient) => {
-        if (patient) {
-          setFormData({
-            full_name: patient.fullName,
-            social_name: patient.socialName || "",
-            cpf: patient.cpf,
-            rg: patient.rg || "",
-            birth_date: patient.birthDate,
-            marital_status: patient.maritalStatus || "",
-            nationality: patient.nationality || "",
-            naturalness: patient.naturalness || "",
-            phone: patient.phone || "",
-            profession: patient.profession || "",
-            father_name: patient.fatherName || "",
-            mother_name: patient.motherName || "",
-            has_children: patient.hasChildren || false,
-            children_count: patient.childrenCount || 0,
-            sus_card: patient.susCard || "",
-            address_line: patient.addressLine || "",
-            neighborhood: patient.neighborhood || "",
-            city: patient.city || "",
-            state: patient.state || "",
-            zip_code: patient.zipCode || "",
-            address_notes: patient.addressNotes || "",
-            general_notes: patient.generalNotes || "",
-          });
+    let active = true;
+
+    async function loadPatient() {
+      try {
+        const resolvedParams = await params;
+        if (!active) return;
+
+        setId(resolvedParams.id);
+
+        const response = await fetch(`/api/patients/${resolvedParams.id}`, {
+          method: "GET",
+          cache: "no-store",
+        });
+        const result = (await response.json().catch(() => ({}))) as PatientResponse & { error?: string };
+
+        if (!response.ok) {
+          throw new Error(result.error || "Erro ao carregar paciente.");
         }
-        setLoading(false);
-      });
-    });
+
+        if (active) {
+          setFormData(toFormData(result));
+        }
+      } catch (loadError) {
+        if (active) {
+          setError(loadError instanceof Error ? loadError.message : "Erro ao carregar paciente.");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadPatient();
+
+    return () => {
+      active = false;
+    };
   }, [params]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -83,16 +168,27 @@ export default function EditPatientPage({ params }: { params: Promise<{ id: stri
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setError(null);
+
     try {
-      await updatePatient(id, {
-        ...formData,
-        children_count: Number(formData.children_count),
+      const response = await fetch(`/api/patients/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          children_count: Number(formData.children_count),
+        }),
       });
+
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro ao atualizar paciente. Tente novamente.");
+      }
+
       router.push(`/patients/${id}`);
-      router.refresh();
-    } catch (error) {
-      console.error("Erro ao atualizar paciente:", error);
-      alert("Erro ao atualizar paciente. Tente novamente.");
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Erro ao atualizar paciente. Tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -106,6 +202,16 @@ export default function EditPatientPage({ params }: { params: Promise<{ id: stri
     );
   }
 
+  if (error && !id) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="card" style={{ borderColor: "var(--danger)", background: "rgba(220,38,38,0.04)" }}>
+          <p style={{ color: "var(--danger)", margin: 0 }}>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center gap-4 mb-6">
@@ -115,6 +221,12 @@ export default function EditPatientPage({ params }: { params: Promise<{ id: stri
         </Link>
         <h1 className="text-2xl font-bold">Editar Paciente</h1>
       </div>
+
+      {error ? (
+        <div className="card" style={{ borderColor: "var(--danger)", background: "rgba(220,38,38,0.04)", marginBottom: 16 }}>
+          <p style={{ color: "var(--danger)", margin: 0 }}>{error}</p>
+        </div>
+      ) : null}
 
       <form onSubmit={handleSubmit} className="card">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -303,6 +415,63 @@ export default function EditPatientPage({ params }: { params: Promise<{ id: stri
               value={formData.zip_code}
               onChange={handleChange}
               className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Naturalidade</label>
+            <input
+              type="text"
+              name="naturalness"
+              value={formData.naturalness}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Nacionalidade</label>
+            <input
+              type="text"
+              name="nationality"
+              value={formData.nationality}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                type="checkbox"
+                name="has_children"
+                checked={formData.has_children}
+                onChange={handleChange}
+              />
+              Tem filhos?
+            </label>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Quantidade de filhos</label>
+            <input
+              type="number"
+              name="children_count"
+              value={formData.children_count}
+              onChange={handleChange}
+              className="form-input"
+              min={0}
+            />
+          </div>
+
+          <div className="form-group md:col-span-2">
+            <label className="form-label">Observações de endereço</label>
+            <textarea
+              name="address_notes"
+              value={formData.address_notes}
+              onChange={handleChange}
+              className="form-input"
+              rows={3}
             />
           </div>
 
